@@ -12,6 +12,21 @@ export function buildAuthHeaders(token: string | null) {
   return headers;
 }
 
+// ✅ Add this helper for non-authenticated calls like login/register
+export async function apiPost(path: string, body: unknown) {
+  const resp = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: buildAuthHeaders(null), // no token yet for login/register
+    body: JSON.stringify(body),
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error((data as any).error || "Request failed");
+  }
+  return data;
+}
+
 // Small hook for convenience
 export function useApi() {
   const { token } = useAuth();
