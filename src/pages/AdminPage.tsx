@@ -297,7 +297,7 @@ export const AdminPage: React.FC = () => {
   // -------- RENDER --------
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+    <div className="min-h-screen text-slate-100 flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
         <div className="flex items-center gap-6">
           {/* App title / logo → always goes to dashboard */}
@@ -374,7 +374,7 @@ export const AdminPage: React.FC = () => {
 
       <main className="flex-1 p-6 space-y-8">
         {/* --- Section 1: Snapshot current season --- */}
-        <section className="max-w-3xl mx-auto rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-sm shadow-slate-900/60">
+        <section className="max-w-3xl mx-auto rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm shadow-slate-900/60">
           <h2 className="text-xl font-semibold mb-2">
             Snapshot current season leaderboard
           </h2>
@@ -483,7 +483,7 @@ export const AdminPage: React.FC = () => {
         </section>
 
         {/* --- Section 2: Full end-of-season rollover --- */}
-        <section className="max-w-3xl mx-auto rounded-xl border border-red-800/70 bg-red-950/20 p-6 shadow-sm shadow-red-900/40">
+        <section className="max-w-3xl mx-auto rounded-xl border border-red-800/70 bg-[#1A1424] p-6 shadow-sm shadow-red-900/40">
           <h2 className="text-xl font-semibold mb-2">
             End current season &amp; start a new one
           </h2>

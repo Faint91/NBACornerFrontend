@@ -4,7 +4,12 @@ import { LoginPage } from "./pages/LoginPage";
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen text-slate-50 flex flex-col bg-cover bg-center bg-fixed"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(15,23,42,0.80), rgba(15,23,42,0.80)), url('/background.png')",
+        }}
+      >
       <div className="w-full max-w-2xl mx-auto px-4 py-8">
         <header className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
