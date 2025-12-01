@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary, LeagueMember } from "../api/leagues";
+import { Footer } from "../components/layout/Footer";
 
 export const LeagueInfoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -39,10 +40,9 @@ export const LeagueInfoPage: React.FC = () => {
   const [showCreateLeagueForm, setShowCreateLeagueForm] = useState(false);
   const [newLeagueName, setNewLeagueName] = useState("");
   const [newLeaguePassword, setNewLeaguePassword] = useState("");
+  const [newLeagueVisibility, setNewLeagueVisibility] = useState<"public" | "private">("public");
   const [creatingLeague, setCreatingLeague] = useState(false);
-  const [createLeagueError, setCreateLeagueError] = useState<string | null>(
-    null
-  );
+  const [createLeagueError, setCreateLeagueError] = useState<string | null>(null);
   
   // State for custom confirmation modals
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
@@ -141,8 +141,16 @@ export const LeagueInfoPage: React.FC = () => {
     e.preventDefault();
 
     const name = newLeagueName.trim();
-    if (!name || !newLeaguePassword) {
-      setCreateLeagueError("Please enter a name and password.");
+    const isPrivate = newLeagueVisibility === "private";
+    const password = newLeaguePassword.trim();
+
+    if (!name) {
+      setCreateLeagueError("Please enter a league name.");
+      return;
+    }
+
+    if (isPrivate && !password) {
+      setCreateLeagueError("Please enter a password for a private league.");
       return;
     }
 
@@ -150,33 +158,39 @@ export const LeagueInfoPage: React.FC = () => {
       setCreatingLeague(true);
       setCreateLeagueError(null);
 
-      const league = await createLeague({
+      const payload = {
         name,
-        password: newLeaguePassword,
+        // For public leagues we explicitly send empty string so backend treats it as public
+        password: isPrivate ? password : "",
+      };
+
+      const createdLeague = await createLeague(payload);
+
+      // Add to my leagues and keep them sorted (by name, case-insensitive)
+      setMyLeagues((prev) => {
+        const updated = [...prev, createdLeague];
+        return updated.sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        );
       });
 
-      // Add new league to "my leagues" and keep alphabetical order
-      setMyLeagues((prev) =>
-        [...prev, league].sort((a, b) =>
-          (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase())
-        )
-      );
+      setSelectedLeagueId(createdLeague.id);
+      setSelectedLeagueName(createdLeague.name);
 
       // Reset form
       setNewLeagueName("");
       setNewLeaguePassword("");
+      setNewLeagueVisibility("public");
       setShowCreateLeagueForm(false);
-
-      // Auto-select the new league so the user sees its info
-      setSelectedLeagueId(league.id);
-      setSelectedLeagueName(league.name || null);
     } catch (err: any) {
-      console.error("Failed to create league:", err);
-      setCreateLeagueError(err?.message || "Failed to create league");
+      setCreateLeagueError(
+        err?.message || "Failed to create league. Please try again."
+      );
     } finally {
       setCreatingLeague(false);
     }
   };
+
 
   const iAmMember = !!(
     currentUserId && members.some((m) => m.user_id === currentUserId)
@@ -308,6 +322,12 @@ export const LeagueInfoPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
 
@@ -362,44 +382,82 @@ export const LeagueInfoPage: React.FC = () => {
               className="hidden"
               tabIndex={-1}
             />
+			
+			<div className="mb-2">
+              <span className="block text-xs text-slate-300 mb-1">
+                League type
+              </span>
+              <div className="flex items-center gap-4 text-xs text-slate-200">
+                <label className="inline-flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="league-visibility"
+                    value="public"
+                    className="h-3 w-3"
+                    checked={newLeagueVisibility === "public"}
+                    onChange={() => {
+                      setNewLeagueVisibility("public");
+                      // Optional: clear password when switching back to public
+                      setNewLeaguePassword("");
+                    }}
+                  />
+                  <span>Public</span>
+                </label>
+                <label className="inline-flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="league-visibility"
+                    value="private"
+                    className="h-3 w-3"
+                    checked={newLeagueVisibility === "private"}
+                    onChange={() => setNewLeagueVisibility("private")}
+                  />
+                  <span>Private</span>
+                </label>
+              </div>
+            </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-              <div className="flex-1 mb-2 sm:mb-0">
-                <label className="block text-xs text-slate-300 mb-1">
-                  League name
-                </label>
-                <input
-                  type="text"
-                  name="new-league-name"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  readOnly
-                  onFocus={(e) => {
-                    // Enable typing only after focus; many browsers won't try to autofill this.
-                    e.currentTarget.readOnly = false;
-                  }}
-                  className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Enter league name"
-                  value={newLeagueName}
-                  onChange={(e) => setNewLeagueName(e.target.value)}
-                />
-              </div>
-
-              <div className="flex-1">
-                <label className="block text-xs text-slate-300 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="new-league-password"
-                  autoComplete="off"
-                  className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Leave empty for no password"
-                  value={newLeaguePassword}
-                  onChange={(e) => setNewLeaguePassword(e.target.value)}
-                />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                <div className="flex-1 mb-2 sm:mb-0">
+                  <label className="block text-xs text-slate-300 mb-1">
+                    League name
+                  </label>
+                  <input
+                    type="text"
+                    name="new-league-name"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    readOnly
+                    onFocus={(e) => {
+                      // Enable typing only after focus; many browsers won't try to autofill this.
+                      e.currentTarget.readOnly = false;
+                    }}
+                    className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Enter league name"
+                    value={newLeagueName}
+                    onChange={(e) => setNewLeagueName(e.target.value)}
+                  />
+                </div>
+			  
+                {newLeagueVisibility === "private" && (
+                  <div className="flex-1">
+                    <label className="block text-xs text-slate-300 mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      name="new-league-password"
+                      autoComplete="off"
+                      className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      placeholder="Enter password"
+                      value={newLeaguePassword}
+                      onChange={(e) => setNewLeaguePassword(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -601,6 +659,7 @@ export const LeagueInfoPage: React.FC = () => {
           </>
         )}
       </main>
+	  <Footer />
 	  {/* Custom confirmation modal for leaving a league */}
       {confirmLeaveOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -174,6 +174,15 @@ export const LoginPage: React.FC = () => {
             >
               {loading ? "Logging in..." : "Log in"}
             </button>
+            <p className="mt-3 text-xs text-slate-400 text-center">
+              Have you forgotten your password?{" "}
+              <Link
+                to="/reset-password"
+                className="text-indigo-300 hover:text-indigo-200"
+              >
+                Reset it
+              </Link>
+            </p>
           </form>
 
           <p className="mt-4 text-center text-xs text-slate-400">

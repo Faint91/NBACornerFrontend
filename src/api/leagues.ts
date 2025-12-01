@@ -15,6 +15,8 @@ export interface LeagueSummary {
   is_member?: boolean;
   joined_at?: string | null;
   member_count?: number;
+  // Non-global leagues: whether a password is required to join
+  requires_password?: boolean;
 }
 
 // League returned by create/join/delete endpoints under "league"

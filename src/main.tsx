@@ -12,6 +12,11 @@ import { PastSeasonsPage } from "./pages/PastSeasonsPage";
 import { FindLeaguesPage } from "./pages/FindLeaguesPage";
 import { LeagueInfoPage } from "./pages/LeagueInfoPage";
 import { AdminPage } from "./pages/AdminPage";
+import { TermsPage } from "./pages/TermsPage";
+import { FaqsPage } from "./pages/FaqsPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { AccountPage } from "./pages/AccountPage";
+import { LeagueStatsPage } from "./pages/LeagueStatsPage";
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { token } = useAuth();
@@ -30,8 +35,27 @@ const RootApp: React.FC = () => {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
 		  <Route path="/register" element={<RegisterPage />} />
+		  <Route path="/reset-password" element={<ResetPasswordPage />} />
 		  <Route path="/leaderboard" element={<LeaderboardPage />} />
 		  <Route path="/past-seasons" element={<PastSeasonsPage />} />
+		  <Route path="/terms" element={<TermsPage />} />
+          <Route path="/faqs" element={<FaqsPage />} />
+		  <Route
+            path="/league-stats"
+            element={
+              <ProtectedRoute>
+                <LeagueStatsPage />
+              </ProtectedRoute>
+            }
+          />
+		  <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <AccountPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

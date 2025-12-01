@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
+import { Footer } from "../components/layout/Footer";
 
 type BracketListItem = {
   bracket_id: string;
@@ -283,6 +284,12 @@ export const DashboardPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
       
@@ -496,7 +503,7 @@ export const DashboardPage: React.FC = () => {
           )}
         </section>
       </main>
-
+      <Footer />
       {/* Custom delete confirmation modal */}
       {confirmDeleteOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">

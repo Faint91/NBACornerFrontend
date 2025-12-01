@@ -8,6 +8,8 @@ import React, {
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
+import { Footer } from "../components/layout/Footer";
+
 // NOTE: we dynamically import 'dom-to-image-more' inside the click handler
 // to avoid module initialization issues in some environments.
 
@@ -797,6 +799,12 @@ export const BracketPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
       
@@ -1484,6 +1492,7 @@ export const BracketPage: React.FC = () => {
           </section>
         )}
       </main>
+	  <Footer />
     </div>
   );
 };

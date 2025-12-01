@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useLeaguesApi } from "../api/leagues";
 import { useAuth } from "../auth/AuthContext";
 import type { LeagueSummary } from "../api/leagues";
+import { Footer } from "../components/layout/Footer";
 
 export const FindLeaguesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,15 +71,25 @@ export const FindLeaguesPage: React.FC = () => {
     const name = (league.name || "").toLowerCase();
     return name.includes(searchTerm.trim().toLowerCase());
   });
+  
+  const publicLeagues = filteredLeagues.filter(
+    (league) => !league.requires_password
+  );
+  const privateLeagues = filteredLeagues.filter(
+    (league) => league.requires_password
+  );
 
   const handleJoin = async (leagueId: string) => {
+    const league = leagues.find((l) => l.id === leagueId);
+    const requiresPassword = !!league?.requires_password;
+
     const password = passwords[leagueId] || "";
 
     // All feedback messages (error/success) belong to this league
     setJoinFeedbackLeagueId(leagueId);
     setJoinSuccessMessage(null);
 
-    if (!password) {
+    if (requiresPassword && !password) {
       setJoinError("Please enter the league password.");
       return;
     }
@@ -86,12 +97,22 @@ export const FindLeaguesPage: React.FC = () => {
     try {
       setJoinError(null);
       setJoiningId(leagueId);
-      await joinLeague(leagueId, password);
+      // For public leagues, send empty string as password
+      await joinLeague(leagueId, requiresPassword ? password : "");
 
       // Mark this league as joined locally
       setLeagues((prev) =>
         prev.map((l) =>
-          l.id === leagueId ? { ...l, is_member: true } : l
+          l.id === leagueId
+            ? {
+                ...l,
+                is_member: true,
+                member_count:
+                  typeof l.member_count === "number"
+                    ? l.member_count + 1
+                    : l.member_count,
+              }
+            : l
         )
       );
 
@@ -111,6 +132,7 @@ export const FindLeaguesPage: React.FC = () => {
       setJoiningId(null);
     }
   };
+
 
 
   return (
@@ -163,6 +185,12 @@ export const FindLeaguesPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
 
@@ -184,7 +212,7 @@ export const FindLeaguesPage: React.FC = () => {
 
       <main className="flex-1 p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Find a private league</h2>
+          <h2 className="text-lg font-semibold">Find a league</h2>
         </div>
 		
 		<div className="mb-2">
@@ -221,7 +249,7 @@ export const FindLeaguesPage: React.FC = () => {
 
         {!loading && !error && leagues.length === 0 && (
           <p className="text-sm text-slate-400">
-            There are no private leagues yet.
+            There are no leagues yet.
           </p>
         )}
 
@@ -232,78 +260,170 @@ export const FindLeaguesPage: React.FC = () => {
                 No leagues match this filter.
               </p>
             ) : (
-              <div className="space-y-2">
-                {filteredLeagues.map((league) => (
-                  <div
-                    key={league.id}
-                    className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-semibold">{league.name}</div>
-                      <div className="text-xs text-slate-400">
-                        {league.is_member
-                          ? "You are a member of this league"
-                          : "You are not a member yet"}
-                      </div>
+              <div className="space-y-6">
+                {/* Public leagues */}
+                <section>
+                  <h3 className="text-sm font-semibold text-slate-200 mb-2">
+                    Public leagues
+                  </h3>
 
-                      {typeof league.member_count === "number" && (
-                        <div className="text-xs text-slate-400 mt-1">
-                          {league.member_count} member
-                          {league.member_count === 1 ? "" : "s"}
-                        </div>
-                      )}
-                    </div>
+                  {publicLeagues.length === 0 ? (
+                    <p className="text-xs text-slate-400">
+                      No public leagues match this filter.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {publicLeagues.map((league) => (
+                        <div
+                          key={league.id}
+                          className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-between"
+                        >
+                          <div>
+                            <div className="font-semibold">{league.name}</div>
+                            <div className="text-xs text-slate-400">
+                              {league.is_member
+                                ? "You are a member of this league"
+                                : "You are not a member yet"}
+                            </div>
 
-                    {(!league.is_member || joinFeedbackLeagueId === league.id) && (
-                      <div className="flex flex-col items-end gap-1">
-                        {!league.is_member && (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="password"
-                              name={`league-password-${league.id}`}
-                              autoComplete="off"
-                              className="text-xs px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                              placeholder="Password"
-                              value={passwords[league.id] || ""}
-                              onChange={(e) =>
-                                setPasswords((prev) => ({
-                                  ...prev,
-                                  [league.id]: e.target.value,
-                                }))
-                              }
-                            />
-                            <button
-                              onClick={() => handleJoin(league.id)}
-                              disabled={joiningId === league.id}
-                              className="text-xs px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60"
-                            >
-                              {joiningId === league.id ? "Joining..." : "Join"}
-                            </button>
+                            {typeof league.member_count === "number" && (
+                              <div className="text-xs text-slate-400 mt-1">
+                                {league.member_count} member
+                                {league.member_count === 1 ? "" : "s"}
+                              </div>
+                            )}
                           </div>
-                        )}
 
-                        {joinFeedbackLeagueId === league.id && joinError && (
-                          <p className="text-xs text-red-400">
-                            {joinError}
-                          </p>
-                        )}
+                          {(!league.is_member ||
+                            joinFeedbackLeagueId === league.id) && (
+                            <div className="flex flex-col items-end gap-1">
+                              {!league.is_member && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleJoin(league.id)}
+                                  disabled={joiningId === league.id}
+                                  className="text-xs px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  {joiningId === league.id
+                                    ? "Joining..."
+                                    : "Join"}
+                                </button>
+                              )}
 
-                        {joinFeedbackLeagueId === league.id &&
-                          !joinError &&
-                          joinSuccessMessage && (
-                            <p className="text-xs text-emerald-400">
-                              {joinSuccessMessage}
-                            </p>
+                              {joinFeedbackLeagueId === league.id &&
+                                joinError && (
+                                  <p className="text-xs text-red-400">
+                                    {joinError}
+                                  </p>
+                                )}
+
+                              {joinFeedbackLeagueId === league.id &&
+                                !joinError &&
+                                joinSuccessMessage && (
+                                  <p className="text-xs text-emerald-400">
+                                    {joinSuccessMessage}
+                                  </p>
+                                )}
+                            </div>
                           )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                {/* Private leagues */}
+                <section>
+                  <h3 className="text-sm font-semibold text-slate-200 mb-2">
+                    Private leagues
+                  </h3>
+
+                  {privateLeagues.length === 0 ? (
+                    <p className="text-xs text-slate-400">
+                      No private leagues match this filter.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {privateLeagues.map((league) => (
+                        <div
+                          key={league.id}
+                          className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-between"
+                        >
+                          <div>
+                            <div className="font-semibold">{league.name}</div>
+                            <div className="text-xs text-slate-400">
+                              {league.is_member
+                                ? "You are a member of this league"
+                                : "You are not a member yet"}
+                            </div>
+
+                            {typeof league.member_count === "number" && (
+                              <div className="text-xs text-slate-400 mt-1">
+                                {league.member_count} member
+                                {league.member_count === 1 ? "" : "s"}
+                              </div>
+                            )}
+                          </div>
+
+                          {(!league.is_member ||
+                            joinFeedbackLeagueId === league.id) && (
+                            <div className="flex flex-col items-end gap-1">
+                              {!league.is_member && (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="password"
+                                    name={`league-password-${league.id}`}
+                                    autoComplete="off"
+                                    className="text-xs px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="Password"
+                                    value={passwords[league.id] || ""}
+                                    onChange={(e) =>
+                                      setPasswords((prev) => ({
+                                        ...prev,
+                                        [league.id]: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleJoin(league.id)}
+                                    disabled={joiningId === league.id}
+                                    className="text-xs px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  >
+                                    {joiningId === league.id
+                                      ? "Joining..."
+                                      : "Join"}
+                                  </button>
+                                </div>
+                              )}
+
+                              {joinFeedbackLeagueId === league.id &&
+                                joinError && (
+                                  <p className="text-xs text-red-400">
+                                    {joinError}
+                                  </p>
+                                )}
+
+                              {joinFeedbackLeagueId === league.id &&
+                                !joinError &&
+                                joinSuccessMessage && (
+                                  <p className="text-xs text-emerald-400">
+                                    {joinSuccessMessage}
+                                  </p>
+                                )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
               </div>
             )}
           </>
         )}
       </main>
+	  <Footer />
     </div>
   );
 };

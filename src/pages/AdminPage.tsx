@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
+import { Footer } from "../components/layout/Footer";
+
 
 const SuccessMessage: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="mt-3 rounded-md border border-emerald-500/60 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-200">
@@ -348,6 +350,12 @@ export const AdminPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
 
@@ -746,6 +754,7 @@ export const AdminPage: React.FC = () => {
           confirmVariant="danger"
         />
       </main>
+	  <Footer />
     </div>
   );
 };

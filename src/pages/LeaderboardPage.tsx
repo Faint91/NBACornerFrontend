@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
-
+import { Footer } from "../components/layout/Footer";
 
 type MatchStatus =
   | "pending"
@@ -34,6 +34,7 @@ type LeaderboardRow = {
   bonus_finalists: number;
   bonus_champion: number;
   updated_at?: string | null;
+  saved_at?: string | null;
   points_by_match?: Record<string, MatchPoints>;
 };
 
@@ -71,6 +72,14 @@ type BracketsMeEnvelope = {
   playoffs_locked?: boolean;
 };
 
+const sortLeaguesByName = (leagues: LeagueSummary[]) =>
+  [...leagues].sort((a, b) => {
+    const nameA = (a.name || "").toLowerCase();
+    const nameB = (b.name || "").toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+
 export const LeaderboardPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { get, post } = useApi();
@@ -91,7 +100,7 @@ export const LeaderboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // 🔽 NEW: leagues + filter state
-  const [myLeagues, setMyLeagues] = useState<LeagueSummary[]>([]);
+  const [myLeagues, setMyLeagues] = useState<LeagueSummary[] | null>(null);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
   const [selectedLeagueId, setSelectedLeagueId] = useState<string | null>(null);
@@ -160,16 +169,32 @@ export const LeaderboardPage: React.FC = () => {
       setLoadingMembers(false);
     }
   };
+  
+  const sortedLeagues = sortLeaguesByName(myLeagues ?? []);
+
+  const fallbackLeagueId =
+    sortedLeagues.length > 0 ? sortedLeagues[0].id : null;
+
+  // This is what should actually appear selected in the dropdown:
+  // - Before we initialize: first league in the sorted list (if any)
+  // - After we initialize: whatever selectedLeagueId says (including null = Global)
+  const displayedLeagueId = selectedLeagueId ?? (!leagueSelectionInitialized ? fallbackLeagueId : null);
+  
+  const selectedLeagueName =
+    selectedLeagueId == null
+      ? "Global leaderboard"
+      : sortedLeagues.find((l) => l.id === selectedLeagueId)?.name ??
+        "Selected league";
 
   // Initialize league selection once:
   // - If we have a leagueId from navigation and it's one of my leagues → select it.
-  // - Otherwise → select the first alphabetical league.
+  // - Otherwise → select the first league in the sorted dropdown.
   useEffect(() => {
-    // Don't run again once we've initialized the selection
     if (leagueSelectionInitialized) return;
+    if (myLeagues === null) return;           // still loading, do nothing
+    if (myLeagues.length === 0) return;       // user has no leagues → leave Global
 
-    // Wait until leagues are loaded
-    if (!myLeagues || myLeagues.length === 0) return;
+    let targetLeague: LeagueSummary | null = null;
 
     // 1) If a league was passed via navigation and it's in my leagues, use that
     if (initialLeagueIdFromState) {
@@ -177,29 +202,24 @@ export const LeaderboardPage: React.FC = () => {
         (l) => l.id === initialLeagueIdFromState
       );
       if (fromNav) {
-        setSelectedLeagueId(fromNav.id);
-        loadLeagueMembers(fromNav.id);
-        setLeagueSelectionInitialized(true);
-        return;
+        targetLeague = fromNav;
       }
-      // If the passed league isn't in my leagues, fall through to default below
     }
 
-    // 2) Otherwise, default to the first alphabetical league
-    const sorted = [...myLeagues].sort((a, b) => {
-      const nameA = (a.name || "").toLowerCase();
-      const nameB = (b.name || "").toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+    // 2) Otherwise, default to the *first league in the sorted dropdown*
+    if (!targetLeague) {
+      const sorted = sortLeaguesByName(myLeagues);
+      targetLeague = sorted[0] ?? null;
+    }
 
-    const first = sorted[0];
-    if (!first) return;
+    if (!targetLeague) return;
 
-    setSelectedLeagueId(first.id);
-    loadLeagueMembers(first.id);
+    setSelectedLeagueId(targetLeague.id);
+    loadLeagueMembers(targetLeague.id);
     setLeagueSelectionInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLeagueIdFromState, myLeagues, leagueSelectionInitialized]);
+
 
   // Columns 5–25: mapping to match keys in points_by_match
   const matchColumns: { matchKey: string; fallback: string }[] = [
@@ -303,6 +323,7 @@ export const LeaderboardPage: React.FC = () => {
       }));
 
       // Sort: by Points desc, then Full hits desc
+      // Sort: total points desc → full hits desc → bracket saved_at asc
       cleaned.sort((a, b) => {
         const ptsA = a.total_points ?? 0;
         const ptsB = b.total_points ?? 0;
@@ -310,7 +331,23 @@ export const LeaderboardPage: React.FC = () => {
 
         const fullA = a.full_hits ?? 0;
         const fullB = b.full_hits ?? 0;
-        return fullB - fullA;
+        if (fullB !== fullA) return fullB - fullA;
+
+        // Final tiebreaker: earlier saved_at wins (bracket locked earlier)
+        const sa = a.saved_at || "";
+        const sb = b.saved_at || "";
+        if (sa && sb && sa !== sb) {
+          return sa < sb ? -1 : 1;
+        }
+        if (sa && !sb) return -1; // rows with saved_at come before those without
+        if (!sa && sb) return 1;
+
+        // Stable fallback: username, then bracket_id
+        const nameA = (a.username || "").toLowerCase();
+        const nameB = (b.username || "").toLowerCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return a.bracket_id.localeCompare(b.bracket_id);
       });
 
       setRows(cleaned);
@@ -393,7 +430,7 @@ export const LeaderboardPage: React.FC = () => {
 
   const selectedLeague =
     selectedLeagueId
-      ? myLeagues.find((l) => l.id === selectedLeagueId) ?? null
+      ? sortedLeagues.find((l) => l.id === selectedLeagueId) ?? null
       : null;
 
   const visibleRows =
@@ -454,6 +491,12 @@ export const LeaderboardPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
       
@@ -474,38 +517,61 @@ export const LeaderboardPage: React.FC = () => {
       <main className="flex-1 p-6 space-y-4">
         {/* League filter (now above scores/controls) */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">League</span>
-            <select
-              className="text-xs px-2 py-1 rounded-md bg-slate-900 border border-slate-600"
-              value={selectedLeagueId || ""}
-              disabled={isLoadingLeagues || loadingMembers}
-              onChange={(e) => {
-                const value = e.target.value || null;
-                setSelectedLeagueId(value);
-                loadLeagueMembers(value);
-              }}
-            >
-              {[...myLeagues]
-                .sort((a, b) => {
-                  const nameA = (a.name || "").toLowerCase();
-                  const nameB = (b.name || "").toLowerCase();
-                  return nameA.localeCompare(nameB);
-                })
-                .map((league) => (
-                  <option key={league.id} value={league.id}>
-                    {league.name}
-                  </option>
-                ))}
-              <option value="">Global (all users)</option>
-            </select>
-          </div>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="league-select"
+                  className="text-sm font-medium text-slate-200"
+                >
+                  League
+                </label>
+                {myLeagues === null ? (
+                  // While leagues are loading, don't show the dropdown at all
+                  <span className="text-xs text-slate-400">Loading leagues…</span>
+                ) : (
+                  <select
+                    id="league-select"
+                    className="text-xs sm:text-sm rounded-md bg-slate-950 border border-slate-700 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    value={selectedLeagueId ?? (sortedLeagues[0]?.id ?? "")}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? null : e.target.value;
+                      setSelectedLeagueId(val);
+                      loadLeagueMembers(val);
+                    }}
+                  >
+                    {sortedLeagues.map((league) => (
+                      <option key={league.id} value={league.id}>
+                        {league.name || "Unnamed league"}
+                      </option>
+                    ))}
+                    <option value="">Global leaderboard</option>
+                  </select>
+                )}
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-400">
+                For more stats of the league,{" "}
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/league-stats", {
+                      state: {
+                        leagueId: displayedLeagueId,
+                        leagueName: selectedLeagueName,
+                      },
+                    })
+				  }
+				  className="text-indigo-300 hover:text-indigo-200 underline"
+                >
+                  click here
+                </button>
+                .
+              </p>
+            </div>
         </div>
 
         {/* Top controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold">Scores</h2>
 
             {isAdmin && (
               <button
@@ -788,6 +854,7 @@ export const LeaderboardPage: React.FC = () => {
           </div>
         )}
       </main>
+	  <Footer />
     </div>
   );
 };

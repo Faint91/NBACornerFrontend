@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
+import { Footer } from "../components/layout/Footer";
 
 type PastSeason = {
   season_id: string;
@@ -55,6 +56,17 @@ export const PastSeasonsPage: React.FC = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [snapshotAt, setSnapshotAt] = useState<string | null>(null);
+  
+  const canShowStatsLink = (seasonCode: string | null | undefined): boolean => {
+    if (!seasonCode) return false;
+    // Season codes look like "2020-21", "2025-26", etc.
+    const yearPart = seasonCode.split("-")[0]?.trim();
+    const year = Number.parseInt(yearPart, 10);
+    if (Number.isNaN(year)) return false;
+
+    // Only show stats link for seasons 2025-26 and later
+    return year >= 2025;
+  };
 
   // Frontend current season code -> filter out of the dropdown
   const CURRENT_SEASON_CODE = (
@@ -323,6 +335,12 @@ export const PastSeasonsPage: React.FC = () => {
                 Admin
               </button>
             )}
+			<button
+              onClick={() => navigate("/account")}
+              className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
+              >
+              Account
+            </button>
           </nav>
         </div>
 
@@ -343,7 +361,7 @@ export const PastSeasonsPage: React.FC = () => {
       </header>
 
       {/* Main content – same width behavior as LeaderboardPage */}
-      <main className="flex-1 p-6 space-y-4">
+            <main className="flex-1 p-6 space-y-4">
         <h2 className="text-xl font-semibold mb-2">Global leaderboard</h2>
 
         {/* Season selector */}
@@ -363,27 +381,58 @@ export const PastSeasonsPage: React.FC = () => {
         )}
 
         {!loadingSeasons && !seasonsError && seasons.length > 0 && (
-          <div className="flex flex-col gap-2 max-w-sm mb-4">
-            <label
-              htmlFor="season-select"
-              className="text-sm text-slate-300"
-            >
-              Select a past season
-            </label>
-            <select
-              id="season-select"
-              value={selectedSeason}
-              onChange={(e) => setSelectedSeason(e.target.value)}
-              className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {seasons.map((s) => (
-                <option key={s.season_id} value={s.season_code}>
-                  {s.season_code} season
-                </option>
-              ))}
-            </select>
+          <div className="mb-4">
+            <div className="flex flex-col gap-2 max-w-xl">
+              <label
+                htmlFor="season-select"
+                className="text-sm text-slate-300"
+              >
+                Select a past season
+              </label>
+        
+              <div className="flex items-center gap-3">
+                <select
+                  id="season-select"
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {seasons.map((s) => (
+                    <option key={s.season_id} value={s.season_code}>
+                      {s.season_code} season
+                    </option>
+                  ))}
+                </select>
+        
+                {canShowStatsLink(selectedSeason) && (
+                  <p className="text-xs sm:text-sm text-slate-300">
+                    For more stats of the season,{" "}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate("/league-stats", {
+                          state: {
+                            leagueId: null,
+                            leagueName: selectedSeason
+                              ? `${selectedSeason} season`
+                              : "Past season stats",
+                            seasonCode: selectedSeason || null,
+                          },
+                        })
+                      }
+                      className="text-indigo-300 hover:text-indigo-200 underline"
+                    >
+                      click here
+                    </button>
+                    .
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
+
+
 
         {/* Historic table */}
         {historyLoading && (
@@ -535,6 +584,7 @@ export const PastSeasonsPage: React.FC = () => {
             </div>
           )}
       </main>
+	  <Footer />
     </div>
   );
 };
