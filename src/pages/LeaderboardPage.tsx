@@ -108,6 +108,12 @@ export const LeaderboardPage: React.FC = () => {
   const [selectedLeagueMemberIds, setSelectedLeagueMemberIds] = useState<string[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    setIsMobileMenuOpen(false); // close menu after navigating
+  };
 
   const isAdmin = Boolean((user as any)?.is_admin);
   const currentUserId = (user as any)?.id as string | undefined;

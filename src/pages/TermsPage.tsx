@@ -1,5 +1,5 @@
 // src/pages/TermsPage.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { Footer } from "../components/layout/Footer";
