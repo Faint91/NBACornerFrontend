@@ -445,7 +445,7 @@ export const LeaderboardPage: React.FC = () => {
       : rows;
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col'>
+    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col">
       {/* Header (same style as dashboard) */}
       <header className="border-b border-slate-800">
         <div className="flex items-center justify-between px-6 py-4">
