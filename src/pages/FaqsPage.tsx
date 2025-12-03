@@ -196,6 +196,15 @@ export const FaqsPage: React.FC = () => {
                     <span className="font-semibold">{user.username}</span>
                   </div>
                 )}
+				<button
+                  onClick={() => {
+                    navigate("/account");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
+                >
+                  Account
+                </button>
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
