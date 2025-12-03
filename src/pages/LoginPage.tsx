@@ -61,7 +61,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col lg:flex-row">
+    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col lg:flex-row">
       {/* Left marketing panel */}
       <div className="order-2 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
         <div>

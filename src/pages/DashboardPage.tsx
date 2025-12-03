@@ -239,7 +239,7 @@ export const DashboardPage: React.FC = () => {
   const disabledBecauseSeasonOngoing = !creationOpen && !playoffsLocked;
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col'>
       <header className="border-b border-slate-800">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-6">
