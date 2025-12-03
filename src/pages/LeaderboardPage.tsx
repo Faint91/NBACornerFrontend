@@ -645,8 +645,8 @@ export const LeaderboardPage: React.FC = () => {
       </header>
       <main className="flex-1 p-6 space-y-4">
         {/* League filter (now above scores/controls) */}
-        <div className="flex items-center justify-between mb-3">
-            <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex items-center mb-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="league-select"
