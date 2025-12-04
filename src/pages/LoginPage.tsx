@@ -61,19 +61,8 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col lg:flex-row">
-      {/* Mobile-only welcome header */}
-      <div className="w-full px-4 pt-6 pb-2 text-center lg:hidden">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome to <span className="text-indigo-400">NBA Corner</span>
-        </h1>
-        <p className="mt-1 text-xs text-slate-300">
-          Log in to manage your playoff bracket, leagues, and leaderboards.
-        </p>
-      </div>
-  
       {/* Left marketing panel */}
-      <div className="order-2 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
+      <div className="order-1 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/5 px-3 py-1 text-[11px] font-medium text-indigo-200 mb-4">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -126,7 +115,7 @@ export const LoginPage: React.FC = () => {
       </div>
   
       {/* Right auth form panel */}
-      <div className="order-1 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+      <div className="order-2 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
           <div className="mb-5">
             <h2 className="text-xl font-semibold tracking-tight">

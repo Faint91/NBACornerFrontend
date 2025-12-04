@@ -57,17 +57,6 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col lg:flex-row">
-      {/* Mobile-only welcome header */}
-      <div className="w-full px-4 pt-6 pb-2 text-center lg:hidden">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome to <span className="text-indigo-400">NBA Corner</span>
-        </h1>
-        <p className="mt-1 text-xs text-slate-300">
-          Create your account to build brackets, join leagues and track your results.
-        </p>
-      </div>
-  
       {/* Left marketing panel */}
       <div className="order-2 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
         <div>
