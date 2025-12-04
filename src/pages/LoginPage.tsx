@@ -79,6 +79,90 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
   
+        {/* Mobile login panel (between hero text and feature cards) */}
+        <div className="mt-6 lg:hidden">
+          <div className="w-full max-w-md mx-auto rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Log in to your account
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Use your email or username and password to access NBA Corner.
+              </p>
+            </div>
+  
+            {fromRegister && !status && (
+              <div className="mb-4 rounded-md border border-emerald-500/60 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-200">
+                Account created successfully. You can now log in.
+              </div>
+            )}
+  
+            {status && (
+              <div className="mb-4 rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-100">
+                {status}
+              </div>
+            )}
+  
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-200 mb-1">
+                  Email or username
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="you@example.com or username"
+                  required
+                />
+              </div>
+  
+              <div>
+                <label className="block text-xs font-medium text-slate-200 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+  
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-md bg-indigo-600 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-60"
+              >
+                {loading ? "Logging in..." : "Log in"}
+              </button>
+              <p className="mt-3 text-xs text-slate-400 text-center">
+                Have you forgotten your password?{" "}
+                <Link
+                  to="/reset-password"
+                  className="text-indigo-300 hover:text-indigo-200"
+                >
+                  Reset it
+                </Link>
+              </p>
+            </form>
+  
+            <p className="mt-4 text-center text-xs text-slate-400">
+              Don&apos;t have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="text-indigo-300 hover:underline"
+              >
+                Sign up for free
+              </button>
+            </p>
+          </div>
+        </div>
+  
+        {/* Feature cards */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl text-sm">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-lg mb-1">🏆 Bracket challenge</div>
@@ -115,8 +199,8 @@ export const LoginPage: React.FC = () => {
         </p>
       </div>
   
-      {/* Right auth form panel */}
-      <div className="order-2 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+      {/* Right auth form panel - desktop only */}
+      <div className="order-2 lg:order-2 hidden lg:flex flex-1 items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
           <div className="mb-5">
             <h2 className="text-xl font-semibold tracking-tight">
