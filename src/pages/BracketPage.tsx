@@ -1212,23 +1212,50 @@ export const BracketPage: React.FC = () => {
 
                                           {m.round > 0 && hasTeams ? (
                                             canEdit ? (
-                                              <div className="flex gap-1">
-                                                {gameOptions.map((g) => (
-                                                  <button
-                                                    key={g}
-                                                    onClick={() => handleSelectGames(m, g)}
+                                              <>
+                                                {/* Mobile: compact dropdown for number of games */}
+                                                <div className="md:hidden">
+                                                  <select
+                                                    value={selectedGames ?? ""}
+                                                    onChange={(e) => {
+                                                      const val = parseInt(e.target.value, 10);
+                                                      if (!Number.isNaN(val)) {
+                                                        handleSelectGames(m, val);
+                                                      }
+                                                    }}
                                                     disabled={isUpdating}
-                                                    className={
-                                                      "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
-                                                      (selectedGames === g
-                                                        ? "bg-indigo-600 border-indigo-500 text-white"
-                                                        : "")
-                                                    }
+                                                    className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    {g}
-                                                  </button>
-                                                ))}
-                                              </div>
+                                                    <option value="" disabled>
+                                                      Games
+                                                    </option>
+                                                    {gameOptions.map((g) => (
+                                                      <option key={g} value={g}>
+                                                        {g}
+                                                      </option>
+                                                    ))}
+                                                  </select>
+                                                </div>
+                                          
+                                                {/* Desktop / tablet: keep existing 4 buttons */}
+                                                <div className="hidden md:flex gap-1">
+                                                  {gameOptions.map((g) => (
+                                                    <button
+                                                      key={g}
+                                                      onClick={() => handleSelectGames(m, g)}
+                                                      disabled={isUpdating}
+                                                      className={
+                                                        "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
+                                                        (selectedGames === g
+                                                          ? "bg-indigo-600 border-indigo-500 text-white"
+                                                          : "")
+                                                      }
+                                                    >
+                                                      {g}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </>
                                             ) : (
                                               <GamesBadge match={m} selectedGames={selectedGames} />
                                             )
@@ -1384,23 +1411,50 @@ export const BracketPage: React.FC = () => {
 
                                           {m.round > 0 && hasTeams ? (
                                             canEdit ? (
-                                              <div className="flex gap-1">
-                                                {gameOptions.map((g) => (
-                                                  <button
-                                                    key={g}
-                                                    onClick={() => handleSelectGames(m, g)}
+                                              <>
+                                                {/* Mobile: compact dropdown for number of games */}
+                                                <div className="md:hidden">
+                                                  <select
+                                                    value={selectedGames ?? ""}
+                                                    onChange={(e) => {
+                                                      const val = parseInt(e.target.value, 10);
+                                                      if (!Number.isNaN(val)) {
+                                                        handleSelectGames(m, val);
+                                                      }
+                                                    }}
                                                     disabled={isUpdating}
-                                                    className={
-                                                      "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
-                                                      (selectedGames === g
-                                                        ? "bg-indigo-600 border-indigo-500 text-white"
-                                                        : "")
-                                                    }
+                                                    className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    {g}
-                                                  </button>
-                                                ))}
-                                              </div>
+                                                    <option value="" disabled>
+                                                      Games
+                                                    </option>
+                                                    {gameOptions.map((g) => (
+                                                      <option key={g} value={g}>
+                                                        {g}
+                                                      </option>
+                                                    ))}
+                                                  </select>
+                                                </div>
+                                          
+                                                {/* Desktop / tablet: keep existing 4 buttons */}
+                                                <div className="hidden md:flex gap-1">
+                                                  {gameOptions.map((g) => (
+                                                    <button
+                                                      key={g}
+                                                      onClick={() => handleSelectGames(m, g)}
+                                                      disabled={isUpdating}
+                                                      className={
+                                                        "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
+                                                        (selectedGames === g
+                                                          ? "bg-indigo-600 border-indigo-500 text-white"
+                                                          : "")
+                                                      }
+                                                    >
+                                                      {g}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </>
                                             ) : (
                                               <GamesBadge match={m} selectedGames={selectedGames} />
                                             )
@@ -1577,25 +1631,52 @@ export const BracketPage: React.FC = () => {
                                             <span />
                                           )}
 
-                                          {m.round > 0 && hasTeams ? (
+                                           {m.round > 0 && hasTeams ? (
                                             canEdit ? (
-                                              <div className="flex gap-1">
-                                                {gameOptions.map((g) => (
-                                                  <button
-                                                    key={g}
-                                                    onClick={() => handleSelectGames(m, g)}
+                                              <>
+                                                {/* Mobile: compact dropdown for number of games */}
+                                                <div className="md:hidden">
+                                                  <select
+                                                    value={selectedGames ?? ""}
+                                                    onChange={(e) => {
+                                                      const val = parseInt(e.target.value, 10);
+                                                      if (!Number.isNaN(val)) {
+                                                        handleSelectGames(m, val);
+                                                      }
+                                                    }}
                                                     disabled={isUpdating}
-                                                    className={
-                                                      "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
-                                                      (selectedGames === g
-                                                        ? "bg-indigo-600 border-indigo-500 text-white"
-                                                        : "")
-                                                    }
+                                                    className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    {g}
-                                                  </button>
-                                                ))}
-                                              </div>
+                                                    <option value="" disabled>
+                                                      Games
+                                                    </option>
+                                                    {gameOptions.map((g) => (
+                                                      <option key={g} value={g}>
+                                                        {g}
+                                                      </option>
+                                                    ))}
+                                                  </select>
+                                                </div>
+                                          
+                                                {/* Desktop / tablet: keep existing 4 buttons */}
+                                                <div className="hidden md:flex gap-1">
+                                                  {gameOptions.map((g) => (
+                                                    <button
+                                                      key={g}
+                                                      onClick={() => handleSelectGames(m, g)}
+                                                      disabled={isUpdating}
+                                                      className={
+                                                        "text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800 " +
+                                                        (selectedGames === g
+                                                          ? "bg-indigo-600 border-indigo-500 text-white"
+                                                          : "")
+                                                      }
+                                                    >
+                                                      {g}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </>
                                             ) : (
                                               <GamesBadge match={m} selectedGames={selectedGames} />
                                             )
