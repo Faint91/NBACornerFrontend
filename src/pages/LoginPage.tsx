@@ -62,6 +62,16 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col lg:flex-row">
+      {/* Mobile-only welcome header */}
+      <div className="w-full px-4 pt-6 pb-2 text-center lg:hidden">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Welcome to <span className="text-indigo-400">NBA Corner</span>
+        </h1>
+        <p className="mt-1 text-xs text-slate-300">
+          Log in to manage your playoff bracket, leagues, and leaderboards.
+        </p>
+      </div>
+  
       {/* Left marketing panel */}
       <div className="order-2 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
         <div>
@@ -78,7 +88,7 @@ export const LoginPage: React.FC = () => {
             friends, and follow live leaderboards round by round.
           </p>
         </div>
-
+  
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl text-sm">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-lg mb-1">🏆 Bracket challenge</div>
@@ -108,13 +118,13 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
         </div>
-
+  
         <p className="mt-6 text-[11px] text-slate-500">
           Log in to continue where you left off, or create a free account to
           start your first bracket.
         </p>
       </div>
-
+  
       {/* Right auth form panel */}
       <div className="order-1 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
@@ -126,19 +136,19 @@ export const LoginPage: React.FC = () => {
               Use your email or username and password to access NBA Corner.
             </p>
           </div>
-
+  
           {fromRegister && !status && (
             <div className="mb-4 rounded-md border border-emerald-500/60 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-200">
               Account created successfully. You can now log in.
             </div>
           )}
-
+  
           {status && (
             <div className="mb-4 rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-100">
               {status}
             </div>
           )}
-
+  
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-200 mb-1">
@@ -153,7 +163,7 @@ export const LoginPage: React.FC = () => {
                 required
               />
             </div>
-
+  
             <div>
               <label className="block text-xs font-medium text-slate-200 mb-1">
                 Password
@@ -166,7 +176,7 @@ export const LoginPage: React.FC = () => {
                 required
               />
             </div>
-
+  
             <button
               type="submit"
               disabled={loading}
@@ -184,7 +194,7 @@ export const LoginPage: React.FC = () => {
               </Link>
             </p>
           </form>
-
+  
           <p className="mt-4 text-center text-xs text-slate-400">
             Don&apos;t have an account?{" "}
             <button

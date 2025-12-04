@@ -360,13 +360,16 @@ export const PastSeasonsPage: React.FC = () => {
               </span>
             )}
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
               className="text-sm px-3 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
             >
               Logout
             </button>
           </div>
-      
+
           {/* Mobile hamburger button */}
           <button
             type="button"
@@ -478,6 +481,7 @@ export const PastSeasonsPage: React.FC = () => {
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     logout();
+					navigate("/login");
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md border border-slate-600 hover:bg-slate-800"
                 >

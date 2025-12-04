@@ -57,7 +57,17 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col lg:flex-row">
+    <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col lg:flex-row">
+      {/* Mobile-only welcome header */}
+      <div className="w-full px-4 pt-6 pb-2 text-center lg:hidden">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Welcome to <span className="text-indigo-400">NBA Corner</span>
+        </h1>
+        <p className="mt-1 text-xs text-slate-300">
+          Create your account to build brackets, join leagues and track your results.
+        </p>
+      </div>
+  
       {/* Left marketing panel */}
       <div className="order-2 lg:order-1 flex-1 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-8 lg:px-12 lg:py-12">
         <div>
@@ -74,7 +84,7 @@ export const RegisterPage: React.FC = () => {
             brackets, join leagues and track your results.
           </p>
         </div>
-
+  
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl text-sm">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-lg mb-1">🚀 Quick setup</div>
@@ -105,7 +115,7 @@ export const RegisterPage: React.FC = () => {
             </p>
           </div>
         </div>
-
+  
         <p className="mt-6 text-[11px] text-slate-500">
           Already have an account?{" "}
           <button
@@ -117,7 +127,7 @@ export const RegisterPage: React.FC = () => {
           </button>
         </p>
       </div>
-
+  
       {/* Right auth form panel */}
       <div className="order-1 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
@@ -130,13 +140,13 @@ export const RegisterPage: React.FC = () => {
               leaderboards.
             </p>
           </div>
-
+  
           {status && (
             <div className="mb-4 rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-100">
               {status}
             </div>
           )}
-
+  
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-200 mb-1">
@@ -151,7 +161,7 @@ export const RegisterPage: React.FC = () => {
                 required
               />
             </div>
-
+  
             <div>
               <label className="block text-xs font-medium text-slate-200 mb-1">
                 Username
@@ -165,7 +175,7 @@ export const RegisterPage: React.FC = () => {
                 required
               />
             </div>
-
+  
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-200 mb-1">
@@ -192,13 +202,13 @@ export const RegisterPage: React.FC = () => {
                 />
               </div>
             </div>
-
+  
             <p className="text-[11px] text-slate-500">
               By creating an account you agree to play nicely, respect other
               users, and not blame us if your team gets swept in the first
               round.
             </p>
-
+  
             <button
               type="submit"
               disabled={loading}
