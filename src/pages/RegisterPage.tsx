@@ -75,6 +75,110 @@ export const RegisterPage: React.FC = () => {
           </p>
         </div>
   
+        {/* Mobile register panel (between hero text and feature cards) */}
+        <div className="mt-6 lg:hidden">
+          <div className="w-full max-w-md mx-auto rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Sign up to start playing
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Create an account to build brackets, join leagues and follow
+                leaderboards.
+              </p>
+            </div>
+  
+            {status && (
+              <div className="mb-4 rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-100">
+                {status}
+              </div>
+            )}
+  
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-200 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+  
+              <div>
+                <label className="block text-xs font-medium text-slate-200 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Choose something fun"
+                  required
+                />
+              </div>
+  
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-200 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-200 mb-1">
+                    Confirm password
+                  </label>
+                  <input
+                    type="password"
+                    className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+  
+              <p className="text-[11px] text-slate-500">
+                By creating an account you agree to play nicely, respect other
+                users, and not blame us if your team gets swept in the first
+                round.
+              </p>
+  
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-md bg-indigo-600 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-60"
+              >
+                {loading ? "Creating account..." : "Create account"}
+              </button>
+            </form>
+  
+            <p className="mt-4 text-center text-xs text-slate-400">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-indigo-300 hover:underline"
+              >
+                Log in
+              </button>
+            </p>
+          </div>
+        </div>
+  
+        {/* Feature cards */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl text-sm">
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
             <div className="text-lg mb-1">🚀 Quick setup</div>
@@ -105,21 +209,10 @@ export const RegisterPage: React.FC = () => {
             </p>
           </div>
         </div>
-  
-        <p className="mt-6 text-[11px] text-slate-500">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="text-indigo-300 hover:underline"
-          >
-            Log in
-          </button>
-        </p>
       </div>
   
-      {/* Right auth form panel */}
-      <div className="order-2 lg:order-2 flex-1 flex items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
+      {/* Right auth form panel - desktop only */}
+      <div className="order-2 lg:order-2 hidden lg:flex flex-1 items-center justify-center px-4 py-8 lg:px-8 lg:py-12">
         <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-7 shadow-xl shadow-black/40">
           <div className="mb-5">
             <h2 className="text-xl font-semibold tracking-tight">
@@ -207,6 +300,17 @@ export const RegisterPage: React.FC = () => {
               {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
+  
+          <p className="mt-4 text-center text-xs text-slate-400">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="text-indigo-300 hover:underline"
+            >
+              Log in
+            </button>
+          </p>
         </div>
       </div>
     </div>
