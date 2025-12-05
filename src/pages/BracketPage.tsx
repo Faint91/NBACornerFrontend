@@ -1210,13 +1210,13 @@ export const BracketPage: React.FC = () => {
                                             <span />
                                           )}
 
-                                          {m.round > 0 && hasTeams ? (
+                                           {m.round > 0 && hasTeams ? (
                                             canEdit ? (
                                               <>
                                                 {/* Mobile: compact dropdown for number of games */}
                                                 <div className="md:hidden">
                                                   <select
-                                                    value={selectedGames ?? ""}
+                                                    value={selectedGames ?? 4}  // ⬅️ default to 4 if null
                                                     onChange={(e) => {
                                                       const val = parseInt(e.target.value, 10);
                                                       if (!Number.isNaN(val)) {
@@ -1226,9 +1226,6 @@ export const BracketPage: React.FC = () => {
                                                     disabled={isUpdating}
                                                     className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    <option value="" disabled>
-                                                      Games
-                                                    </option>
                                                     {gameOptions.map((g) => (
                                                       <option key={g} value={g}>
                                                         {g}
@@ -1409,13 +1406,13 @@ export const BracketPage: React.FC = () => {
                                             <span />
                                           )}
 
-                                          {m.round > 0 && hasTeams ? (
+                                           {m.round > 0 && hasTeams ? (
                                             canEdit ? (
                                               <>
                                                 {/* Mobile: compact dropdown for number of games */}
                                                 <div className="md:hidden">
                                                   <select
-                                                    value={selectedGames ?? ""}
+                                                    value={selectedGames ?? 4}  // ⬅️ default to 4 if null
                                                     onChange={(e) => {
                                                       const val = parseInt(e.target.value, 10);
                                                       if (!Number.isNaN(val)) {
@@ -1425,9 +1422,6 @@ export const BracketPage: React.FC = () => {
                                                     disabled={isUpdating}
                                                     className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    <option value="" disabled>
-                                                      Games
-                                                    </option>
                                                     {gameOptions.map((g) => (
                                                       <option key={g} value={g}>
                                                         {g}
@@ -1637,7 +1631,7 @@ export const BracketPage: React.FC = () => {
                                                 {/* Mobile: compact dropdown for number of games */}
                                                 <div className="md:hidden">
                                                   <select
-                                                    value={selectedGames ?? ""}
+                                                    value={selectedGames ?? 4}  // ⬅️ default to 4 if null
                                                     onChange={(e) => {
                                                       const val = parseInt(e.target.value, 10);
                                                       if (!Number.isNaN(val)) {
@@ -1647,9 +1641,6 @@ export const BracketPage: React.FC = () => {
                                                     disabled={isUpdating}
                                                     className="text-[11px] px-2 py-1 rounded-md border border-slate-600 bg-slate-900 text-slate-100"
                                                   >
-                                                    <option value="" disabled>
-                                                      Games
-                                                    </option>
                                                     {gameOptions.map((g) => (
                                                       <option key={g} value={g}>
                                                         {g}
