@@ -665,7 +665,7 @@ export const LeaderboardPage: React.FC = () => {
                   <select
                     id="league-select"
                     className="text-xs sm:text-sm rounded-md bg-slate-950 border border-slate-700 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={selectedLeagueId ?? (sortedLeagues[0]?.id ?? "")}
+                    value={displayedLeagueId ?? ""}
                     onChange={(e) => {
                       const val = e.target.value === "" ? null : e.target.value;
                       setSelectedLeagueId(val);
