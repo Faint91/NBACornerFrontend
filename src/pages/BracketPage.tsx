@@ -43,6 +43,10 @@ type Match = {
   team_b: string | null;
   predicted_winner: string | null;
   predicted_winner_games: number | null;
+
+  // present in backend matches table and returned by GET /bracket/:id
+  next_match_id?: string | null;
+  next_slot?: "a" | "b" | null;
 };
 
 type MatchWithTeamMeta = Match & {
@@ -257,14 +261,32 @@ export const BracketPage: React.FC = () => {
       return updated;
     });
   };
+  
+  const updateNextMatchSlotInState = (
+    match: Match,
+    winnerTeamId: string
+  ) => {
+    if (!match.next_match_id || !match.next_slot) return;
+  
+    const slotKey = match.next_slot === "a" ? "team_a" : "team_b";
+  
+    updateMatchInState(match.next_match_id, (m) => {
+      const cloned = { ...(m as Match) } as any;
+      cloned[slotKey] = winnerTeamId;
+      // When the inputs to a future match change, its prediction should be cleared
+      cloned.predicted_winner = null;
+      cloned.predicted_winner_games = null;
+      return cloned as Match;
+    });
+  };
 
   // ---------- Actions for matches ----------
   const handleSetWinner = async (match: Match, team: "A" | "B") => {
     if (!bracketId || !matches || !canEdit) return;
     if (!match.team_a || !match.team_b) return;
-
+  
     const winnerTeamId = team === "A" ? match.team_a : match.team_b;
-
+  
     let games: number;
     if (match.round === 0) {
       games = 1;
@@ -276,21 +298,24 @@ export const BracketPage: React.FC = () => {
           : null;
       games = existing ?? pending ?? 4;
     }
-
-    // 🔹 Optimistic UI: update local state immediately
+  
+    // 🔹 Optimistic UI: update THIS match locally
     updateMatchInState(match.id, (m) => ({
       ...(m as Match),
       predicted_winner: winnerTeamId,
       predicted_winner_games: games,
     }));
-
+  
+    // 🔹 Optimistic UI: also update the NEXT match’s slot locally
+    updateNextMatchSlotInState(match, winnerTeamId);
+  
     // Clear any pending games once we have a real pick
     setPendingGames((prev) => {
       const copy = { ...prev };
       delete copy[match.id];
       return copy;
     });
-
+  
     try {
       setUpdatingMatchId(match.id);
       setError(null);
@@ -299,11 +324,12 @@ export const BracketPage: React.FC = () => {
         team: winnerTeamId,
         games,
       });
-      // Keep this so downstream matches (next rounds) are refreshed from server
-      await loadBracket({ silent: true });
+      // ✅ No loadBracket on success – we already updated local state,
+      // and the backend is doing the exact same propagation.
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to update match");
+  
       // 🔁 Revert to server truth if something went wrong
       try {
         await loadBracket({ silent: true });
@@ -314,6 +340,7 @@ export const BracketPage: React.FC = () => {
       setUpdatingMatchId(null);
     }
   };
+
 
   const handleUndo = async (match: Match) => {
     if (!bracketId || !matches) return;
