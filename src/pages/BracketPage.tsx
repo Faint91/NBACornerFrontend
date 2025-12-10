@@ -88,6 +88,14 @@ const getTeamName = (match: Match, side: "A" | "B"): string => {
     : m.team_b_name || match.team_b || "TBD";
 };
 
+const getTeamCode = (match: Match, side: "A" | "B"): string => {
+  const m = match as MatchWithTeamMeta;
+  return side === "A"
+    ? m.team_a_code || m.team_a_name || match.team_a || "TBD"
+    : m.team_b_code || m.team_b_name || match.team_b || "TBD";
+};
+
+
 const getTeamColors = (
   match: Match,
   side: "A" | "B"
@@ -1310,7 +1318,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerA, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "A")}
                                             </span>
                                           </button>
@@ -1327,7 +1335,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerB, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "B")}
                                             </span>
                                           </button>
@@ -1507,7 +1515,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerA, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "A")}
                                             </span>
                                           </button>
@@ -1524,7 +1532,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerB, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "B")}
                                             </span>
                                           </button>
@@ -1726,7 +1734,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerA, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "A")}
                                             </span>
                                           </button>
@@ -1743,7 +1751,7 @@ export const BracketPage: React.FC = () => {
                                             className={makeTeamClass(!!isWinnerB, hasWinner)}
                                             style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
-                                            <span className="truncate">
+                                            <span className="truncate hidden sm:block">
                                               {getTeamName(m, "B")}
                                             </span>
                                           </button>
