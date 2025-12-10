@@ -1345,7 +1345,8 @@ export const BracketPage: React.FC = () => {
                                                 ? () => handleSetWinner(m, "A")
                                                 : undefined
                                             }
-                                            className={getTeamButtonClassName(!!isWinnerA, m, "A")}
+                                            className={makeTeamClass(!!isWinnerA, hasWinner)}
+                                            style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "A")}
@@ -1364,6 +1365,7 @@ export const BracketPage: React.FC = () => {
                                                 : undefined
                                             }
                                             className={getTeamButtonClassName(!!isWinnerB, m, "B")}
+                                            style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "B")}
@@ -1537,7 +1539,7 @@ export const BracketPage: React.FC = () => {
                                       >
                                         <div className="flex flex-col gap-1">
                                           {/* Team A */}
-                                            <button
+                                          <button
                                             type="button"
                                             disabled={!hasTeams || !canEdit || isUpdating}
                                             onClick={
@@ -1545,7 +1547,8 @@ export const BracketPage: React.FC = () => {
                                                 ? () => handleSetWinner(m, "A")
                                                 : undefined
                                             }
-                                            className={getTeamButtonClassName(!!isWinnerA, m, "A")}
+                                            className={makeTeamClass(!!isWinnerA, hasWinner)}
+                                            style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "A")}
@@ -1554,7 +1557,6 @@ export const BracketPage: React.FC = () => {
                                               {getTeamName(m, "A")}
                                             </span>
                                           </button>
-
                                           {/* Team B */}
                                           <button
                                             type="button"
@@ -1565,6 +1567,7 @@ export const BracketPage: React.FC = () => {
                                                 : undefined
                                             }
                                             className={getTeamButtonClassName(!!isWinnerB, m, "B")}
+                                            style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "B")}
@@ -1760,7 +1763,7 @@ export const BracketPage: React.FC = () => {
                                       >
                                         <div className="flex flex-col gap-1">
                                           {/* Team A */}
-                                                <button
+                                          <button
                                             type="button"
                                             disabled={!hasTeams || !canEdit || isUpdating}
                                             onClick={
@@ -1768,7 +1771,8 @@ export const BracketPage: React.FC = () => {
                                                 ? () => handleSetWinner(m, "A")
                                                 : undefined
                                             }
-                                            className={getTeamButtonClassName(!!isWinnerA, m, "A")}
+                                            className={makeTeamClass(!!isWinnerA, hasWinner)}
+                                            style={buildWinnerStyle(!!isWinnerA, m, "A")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "A")}
@@ -1777,7 +1781,6 @@ export const BracketPage: React.FC = () => {
                                               {getTeamName(m, "A")}
                                             </span>
                                           </button>
-
                                           {/* Team B */}
                                           <button
                                             type="button"
@@ -1788,6 +1791,7 @@ export const BracketPage: React.FC = () => {
                                                 : undefined
                                             }
                                             className={getTeamButtonClassName(!!isWinnerB, m, "B")}
+                                            style={buildWinnerStyle(!!isWinnerB, m, "B")}
                                           >
                                             <span className="truncate block sm:hidden">
                                               {getTeamCode(m, "B")}
