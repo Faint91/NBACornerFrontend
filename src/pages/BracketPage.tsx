@@ -95,6 +95,36 @@ const getTeamCode = (match: Match, side: "A" | "B"): string => {
     : m.team_b_code || m.team_b_name || match.team_b || "TBD";
 };
 
+const getTeamButtonClassName = (
+  isWinner: boolean,
+  match: Match,
+  side: "A" | "B"
+) => {
+  const hasTeams = !!match.team_a && !!match.team_b;
+
+  const base =
+    "w-full text-[11px] sm:text-xs px-2 py-1 rounded-md border " +
+    "border-slate-700 bg-slate-900/80 hover:bg-slate-800 " +
+    "text-slate-100 flex items-center justify-between gap-1 " +
+    "disabled:opacity-50 disabled:cursor-not-allowed";
+
+  // If there are no teams yet, keep it muted and non-interactive
+  if (!hasTeams) {
+    return base + " opacity-60 cursor-default hover:bg-slate-900/80";
+  }
+
+  // Winner: slightly emphasized
+  if (isWinner) {
+    return (
+      base +
+      " font-semibold ring-1 ring-amber-400 shadow-sm shadow-amber-500/30"
+    );
+  }
+
+  // Normal clickable team
+  return base;
+};
+
 
 const getTeamColors = (
   match: Match,
