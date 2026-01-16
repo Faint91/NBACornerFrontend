@@ -23,3 +23,13 @@ export function setUserId(userId: string | null) {
     window.gtag!("set", "user_id", undefined);
   }
 }
+
+export function trackPageView(path: string, title?: string) {
+  if (!hasGtag()) return;
+
+  window.gtag!("event", "page_view", {
+    page_location: window.location.origin + path,
+    page_path: path,
+    page_title: title ?? document.title,
+  });
+}
