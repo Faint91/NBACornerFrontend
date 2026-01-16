@@ -468,6 +468,11 @@ export const BracketPage: React.FC = () => {
         team: winnerTeamId,
         games,
       });
+	  trackEvent("select_content", {
+        content_type: "bracket_match_pick",
+        content_id: `conf:${match.conference}|r:${match.round}|slot:${match.slot}`,
+      });
+
       // ✅ No need to reload bracket on success; backend does same propagation
     } catch (err: any) {
       console.error(err);
@@ -691,6 +696,10 @@ export const BracketPage: React.FC = () => {
       );
 
       setSaveMessage("Bracket saved!");
+	  trackEvent("bracket_completed", {
+        season: String(activeSeasonCode ?? ""),
+      });
+
       setTimeout(() => setSaveMessage(null), 4000);
     } catch (err: any) {
       console.error(err);

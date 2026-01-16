@@ -1,6 +1,7 @@
 // src/App.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
+import { usePageViews } from "./lib/usePageViews";
 
 function App() {
   return (

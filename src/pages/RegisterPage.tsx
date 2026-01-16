@@ -44,6 +44,7 @@ export const RegisterPage: React.FC = () => {
       }
 
       // ✅ On success, send them to login with a flag + email prefilled
+	  trackEvent("sign_up", { method: "password" });
       navigate("/login", {
         state: { registered: true, email },
         replace: true,

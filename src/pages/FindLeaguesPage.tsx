@@ -131,6 +131,7 @@ export const FindLeaguesPage: React.FC = () => {
           ? `You have successfully joined "${joinedLeague.name}".`
           : "You have successfully joined this league."
       );
+	  trackEvent("join_group", { group_id: leagueId });
     } catch (err: any) {
       setJoinSuccessMessage(null);
       setJoinError(err?.message || "Failed to join league");

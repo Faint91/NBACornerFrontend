@@ -175,6 +175,10 @@ export const DashboardPage: React.FC = () => {
       if (!newId) {
         throw new Error("No bracket id returned from API");
       }
+	  trackEvent("bracket_created", {
+        season: String(activeSeasonCode ?? ""),
+      });
+
       navigate(`/bracket/${newId}`);
     } catch (err: any) {
       console.error(err);

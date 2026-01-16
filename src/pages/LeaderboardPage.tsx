@@ -369,6 +369,9 @@ export const LeaderboardPage: React.FC = () => {
   useEffect(() => {
     loadLeaderboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+	trackEvent("leaderboard_viewed", {
+      league_type: selectedLeagueId ? "league" : "global",
+    });
   }, []);
 
   const formatDateTime = (iso?: string | null) => {

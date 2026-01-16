@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(user);
     localStorage.setItem("auth_token", token);
     localStorage.setItem("auth_user", JSON.stringify(user));
+	setUserId(user.id);
+    trackEvent("login", { method: "password" });
   };
 
   const logout = () => {
@@ -48,6 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_user");
+	trackEvent("logout");   // optional (GA4 doesn't have a standard "logout" event)
+    setUserId(null);        // ✅ clears user_id for future events
   };
 
   return (
