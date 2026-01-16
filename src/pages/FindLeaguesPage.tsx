@@ -4,6 +4,7 @@ import { useLeaguesApi } from "../api/leagues";
 import { useAuth } from "../auth/AuthContext";
 import type { LeagueSummary } from "../api/leagues";
 import { Footer } from "../components/layout/Footer";
+import { trackEvent } from "../lib/analytics";
 
 export const FindLeaguesPage: React.FC = () => {
   const navigate = useNavigate();

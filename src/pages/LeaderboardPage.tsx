@@ -5,6 +5,7 @@ import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
 import { Footer } from "../components/layout/Footer";
+import { trackEvent } from "../lib/analytics";
 
 type MatchStatus =
   | "pending"

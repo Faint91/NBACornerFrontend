@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
 import { Footer } from "../components/layout/Footer";
+import { trackEvent } from "../lib/analytics";
 
 // NOTE: we dynamically import 'dom-to-image-more' inside the click handler
 // to avoid module initialization issues in some environments.
@@ -696,9 +697,7 @@ export const BracketPage: React.FC = () => {
       );
 
       setSaveMessage("Bracket saved!");
-	  trackEvent("bracket_completed", {
-        season: String(activeSeasonCode ?? ""),
-      });
+	  trackEvent("bracket_completed");
 
       setTimeout(() => setSaveMessage(null), 4000);
     } catch (err: any) {
@@ -708,7 +707,6 @@ export const BracketPage: React.FC = () => {
       setSaving(false);
     }
   };
-
 
   const gameOptions = [4, 5, 6, 7];
 

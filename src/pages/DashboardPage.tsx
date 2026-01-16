@@ -5,6 +5,7 @@ import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
 import { Footer } from "../components/layout/Footer";
+import { trackEvent } from "../lib/analytics";
 
 type BracketListItem = {
   bracket_id: string;
@@ -175,9 +176,7 @@ export const DashboardPage: React.FC = () => {
       if (!newId) {
         throw new Error("No bracket id returned from API");
       }
-	  trackEvent("bracket_created", {
-        season: String(activeSeasonCode ?? ""),
-      });
+	  trackEvent("bracket_created");
 
       navigate(`/bracket/${newId}`);
     } catch (err: any) {

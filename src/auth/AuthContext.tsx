@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { setUserId, trackEvent } from "../lib/analytics";
 import type { ReactNode } from "react";
 
 type User = {
