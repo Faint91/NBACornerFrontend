@@ -1,3 +1,4 @@
+import { bracketSubmissionReady } from "../lib/bracketValidity";
 import { bracketContentAccess, useBracketDeadline } from "../lib/bracketAccess";
 import React, {
   useEffect,
@@ -255,6 +256,7 @@ export const BracketPage: React.FC = () => {
       setBracket(data.bracket);
       setMatches(data.matches);
       setBracketName(data.bracket.name || "");
+      return data;
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to load bracket");
@@ -290,122 +292,17 @@ export const BracketPage: React.FC = () => {
     });
   };
   
-  const updateNextMatchSlotInState = (
-    match: Match,
-    winnerSide: "A" | "B",
-    winnerTeamId: string
-  ) => {
-    const mWithMeta = match as MatchWithTeamMeta;
-  
-    if (!match.next_match_id || !match.next_slot) return;
-  
-    // Where in the *next* match does this winner go? (A or B)
-    const destSlotLetter = match.next_slot === "a" ? "A" : "B";
-    const destTeamKey = destSlotLetter === "A" ? "team_a" : "team_b";
-    const destNameKey =
-      destSlotLetter === "A" ? "team_a_name" : "team_b_name";
-    const destCodeKey =
-      destSlotLetter === "A" ? "team_a_code" : "team_b_code";
-    const destLogoKey =
-      destSlotLetter === "A" ? "team_a_logo_url" : "team_b_logo_url";
-    const destPrimaryKey =
-      destSlotLetter === "A"
-        ? "team_a_primary_color"
-        : "team_b_primary_color";
-    const destSecondaryKey =
-      destSlotLetter === "A"
-        ? "team_a_secondary_color"
-        : "team_b_secondary_color";
-  
-    // From which side of the *current* match are we copying?
-    const srcNameKey =
-      winnerSide === "A" ? "team_a_name" : "team_b_name";
-    const srcCodeKey =
-      winnerSide === "A" ? "team_a_code" : "team_b_code";
-    const srcLogoKey =
-      winnerSide === "A" ? "team_a_logo_url" : "team_b_logo_url";
-    const srcPrimaryKey =
-      winnerSide === "A"
-        ? "team_a_primary_color"
-        : "team_b_primary_color";
-    const srcSecondaryKey =
-      winnerSide === "A"
-        ? "team_a_secondary_color"
-        : "team_b_secondary_color";
-  
-    updateMatchInState(match.next_match_id, (m) => {
-      const next = { ...(m as MatchWithTeamMeta) } as any;
-  
-      // 🔹 Copy the team ID and all meta so getTeamName + buildWinnerStyle work
-      next[destTeamKey] = winnerTeamId;
-      next[destNameKey] = (mWithMeta as any)[srcNameKey] ?? null;
-      next[destCodeKey] = (mWithMeta as any)[srcCodeKey] ?? null;
-      next[destLogoKey] = (mWithMeta as any)[srcLogoKey] ?? null;
-      next[destPrimaryKey] = (mWithMeta as any)[srcPrimaryKey] ?? null;
-      next[destSecondaryKey] = (mWithMeta as any)[srcSecondaryKey] ?? null;
-  
-      // New inputs → clear any stale prediction on that future match
-      next.predicted_winner = null;
-      next.predicted_winner_games = null;
-  
-      return next as Match;
-    });
+  const reloadPredictionState = async (sourceId: string) => {
+    const before = Object.values(matches ?? {}).flatMap((rounds) => Object.values(rounds).flat());
+    const fresh = await loadBracket({ silent: true });
+    if (!fresh) return;
+    const after = Object.values(fresh.matches).flatMap((rounds) => Object.values(rounds).flat());
+    setPendingGames((pending) => Object.fromEntries(Object.entries(pending).filter(([id]) => {
+      const old = before.find((m) => m.id === id);
+      const next = after.find((m) => m.id === id);
+      return id !== sourceId && old && next && old.team_a === next.team_a && old.team_b === next.team_b;
+    })));
   };
-  
-  const updatePlayInGame3LoserInState = (
-    match: Match,
-    loserSide: "A" | "B",
-    loserTeamId: string
-  ) => {
-    // Only applies to play-in game 2 (round 0, slot 2)
-    if (match.round !== 0 || match.slot !== 2) return;
-    if (!matches) return;
-  
-    const conf = match.conference;
-    const roundKey = String(0);
-    const roundMatches = matches[conf]?.[roundKey];
-    if (!roundMatches) return;
-  
-    const game3 = roundMatches.find(
-      (m) => m.round === 0 && m.slot === 3
-    );
-    if (!game3) return;
-  
-    const src = match as MatchWithTeamMeta;
-  
-    const srcNameKey =
-      loserSide === "A" ? "team_a_name" : "team_b_name";
-    const srcCodeKey =
-      loserSide === "A" ? "team_a_code" : "team_b_code";
-    const srcLogoKey =
-      loserSide === "A" ? "team_a_logo_url" : "team_b_logo_url";
-    const srcPrimaryKey =
-      loserSide === "A"
-        ? "team_a_primary_color"
-        : "team_b_primary_color";
-    const srcSecondaryKey =
-      loserSide === "A"
-        ? "team_a_secondary_color"
-        : "team_b_secondary_color";
-  
-    updateMatchInState(game3.id, (m) => {
-      const next = { ...(m as MatchWithTeamMeta) } as any;
-  
-      // Backend puts the loser into game 3, slot B
-      next.team_b = loserTeamId;
-      next.team_b_name = (src as any)[srcNameKey] ?? null;
-      next.team_b_code = (src as any)[srcCodeKey] ?? null;
-      next.team_b_logo_url = (src as any)[srcLogoKey] ?? null;
-      next.team_b_primary_color = (src as any)[srcPrimaryKey] ?? null;
-      next.team_b_secondary_color = (src as any)[srcSecondaryKey] ?? null;
-  
-      next.predicted_winner = null;
-      next.predicted_winner_games = null;
-  
-      return next as Match;
-    });
-  };
-
 
   // ---------- Actions for matches ----------
   const handleSetWinner = async (match: Match, team: "A" | "B") => {
@@ -413,9 +310,6 @@ export const BracketPage: React.FC = () => {
     if (!match.team_a || !match.team_b) return;
   
     const winnerTeamId = team === "A" ? match.team_a : match.team_b;
-    const loserTeamId = team === "A" ? match.team_b : match.team_a;
-    const winnerSide: "A" | "B" = team;
-    const loserSide: "A" | "B" = team === "A" ? "B" : "A";
   
     let games: number;
     if (match.round === 0) {
@@ -435,12 +329,6 @@ export const BracketPage: React.FC = () => {
       predicted_winner: winnerTeamId,
       predicted_winner_games: games,
     }));
-  
-    // 🔹 Optimistic UI: propagate winner to the next match
-    updateNextMatchSlotInState(match, winnerSide, winnerTeamId);
-  
-    // 🔹 Optimistic UI: play-in special case – loser goes to game 3, slot B
-    updatePlayInGame3LoserInState(match, loserSide, loserTeamId!);
   
     // Clear any pending games once we have a real pick
     setPendingGames((prev) => {
@@ -462,7 +350,7 @@ export const BracketPage: React.FC = () => {
         content_id: `conf:${match.conference}|r:${match.round}|slot:${match.slot}`,
       });
 
-      // ✅ No need to reload bracket on success; backend does same propagation
+      await reloadPredictionState(match.id);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to update match");
@@ -499,7 +387,7 @@ export const BracketPage: React.FC = () => {
       await patch(`/bracket/${bracketId}/match/${match.id}`, {
         action: "undo",
       });
-      await loadBracket({ silent: true });
+      await reloadPredictionState(match.id);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to undo prediction");
@@ -516,7 +404,7 @@ export const BracketPage: React.FC = () => {
 
   const handleSelectGames = async (match: Match, gamesValue: number) => {
     if (!bracketId || !matches || !canEdit) return;
-    if (match.round === 0) return; // play-in is always 1 game
+    if (match.round === 0 || !match.team_a || !match.team_b || !Number.isInteger(gamesValue) || ![4, 5, 6, 7].includes(gamesValue)) return; // play-in is always 1 game
 
     // No winner yet → keep current behaviour (just store pending games locally)
     if (!match.predicted_winner) {
@@ -539,7 +427,7 @@ export const BracketPage: React.FC = () => {
         team: match.predicted_winner,
         games: gamesValue,
       });
-      // ✅ No loadBracket here on success – server and client are already in sync
+      await loadBracket({ silent: true });
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to update games");
@@ -627,25 +515,13 @@ export const BracketPage: React.FC = () => {
   // ---------- Derived data ----------
   const allDecided = useMemo(() => {
     if (!matches) return false;
-    const confs = Object.keys(matches);
-    if (confs.length === 0) return false;
-    for (const conf of confs) {
-      const roundsObj = matches[conf];
-      for (const roundKey of Object.keys(roundsObj)) {
-        const roundMatches = roundsObj[roundKey];
-        for (const m of roundMatches) {
-          if (!m.team_a || !m.team_b) continue;
-          if (!m.predicted_winner) return false;
-          if (m.round > 0 && m.predicted_winner_games == null) return false;
-        }
-      }
-    }
-    return true;
+    const rows = Object.values(matches).flatMap((rounds) => Object.values(rounds).flat());
+    return bracketSubmissionReady(rows);
   }, [matches]);
 
   const trimmedName = bracketName.trim();
   const canSave =
-    canEdit && allDecided && !!trimmedName && !saving && !savingLockedForUser;
+    canEdit && (allDecided || (isAdmin && isMaster)) && !!trimmedName && !saving && !savingLockedForUser;
 
   const handleSaveBracket = async () => {
     if (!bracketId) return;
