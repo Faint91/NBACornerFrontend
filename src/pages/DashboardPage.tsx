@@ -1,3 +1,4 @@
+import { bracketCreationDisabled, useBracketDeadline } from "../lib/bracketAccess";
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -22,6 +23,7 @@ type BracketListItem = {
 type MyBracketEnvelope = {
   bracket: BracketListItem | null;
   playoffs_locked?: boolean;
+  playoffs_deadline_utc?: string | null;
   bracket_creation_open?: boolean;
 };
 
@@ -49,7 +51,10 @@ export const DashboardPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // server-driven flags
-  const [playoffsLocked, setPlayoffsLocked] = useState<boolean>(false);
+  const [serverLocked, setPlayoffsLocked] = useState<boolean>(false);
+  const [deadline, setDeadline] = useState<string | null>(null);
+  const [flagsReady, setFlagsReady] = useState(false);
+  const playoffsLocked = useBracketDeadline(serverLocked, deadline);
   const [creationOpen, setCreationOpen] = useState<boolean>(true);
 
   // State for custom delete confirmation modal
@@ -78,6 +83,8 @@ export const DashboardPage: React.FC = () => {
 
       // flags from backend (source of truth)
       setPlayoffsLocked(Boolean(mineEnv.playoffs_locked));
+      setDeadline(mineEnv.playoffs_deadline_utc ?? null);
+      setFlagsReady(typeof mineEnv.playoffs_locked === "boolean" && typeof mineEnv.bracket_creation_open === "boolean");
       if (typeof mineEnv.bracket_creation_open === "boolean") {
         setCreationOpen(mineEnv.bracket_creation_open);
       }
@@ -168,6 +175,7 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   const handleCreateBracket = async () => {
+    if (createDisabled) return;
     try {
       setCreating(true);
       setError(null);
@@ -229,14 +237,11 @@ export const DashboardPage: React.FC = () => {
 
   const otherBrackets = brackets;
 
-  // Create button rules:
-  // - Everyone: blocked before regular season ends (!creationOpen)
-  // - Regular users: also blocked once playoffsLocked
-  // - Admins: allowed even if playoffsLocked (to create master), but still not before regular season end
-  const createDisabled =
-    creating ||
-    !!myBracket ||
-    (!isAdmin && (!creationOpen || playoffsLocked));
+  // Admin creation retains the existing master-bracket window bypass.
+  const createDisabled = bracketCreationDisabled({
+    creating, hasBracket: !!myBracket, isAdmin, creationOpen,
+    locked: playoffsLocked, ready: flagsReady,
+  });
 
   // 👉 label condition for "Brackets disabled" when regular season is still ongoing
   const disabledBecauseSeasonOngoing = !creationOpen && !playoffsLocked;
@@ -459,7 +464,9 @@ export const DashboardPage: React.FC = () => {
                 ? "You already have a bracket"
                 : creating
                 ? "Creating..."
-                : disabledBecauseSeasonOngoing
+                : playoffsLocked && !isAdmin
+                ? "Brackets locked"
+                : disabledBecauseSeasonOngoing && !isAdmin
                 ? "Brackets disabled"
                 : "Create my bracket"}
             </button>
@@ -479,10 +486,10 @@ export const DashboardPage: React.FC = () => {
           {!loading && !myBracket && (
             <p className="text-slate-400 text-sm">
               You don&apos;t have a bracket yet.{" "}
-              {!creationOpen
-                ? "Bracket creation opens after the regular season ends."
-                : playoffsLocked && !isAdmin
+              {playoffsLocked && !isAdmin
                 ? "Bracket creation is closed once playoffs start."
+                : !creationOpen && !isAdmin
+                ? "Bracket creation opens after the regular season ends."
                 : "Click “Create my bracket” to start."}
             </p>
           )}

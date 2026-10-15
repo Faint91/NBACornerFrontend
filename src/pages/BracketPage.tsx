@@ -1,3 +1,4 @@
+import { bracketContentAccess, useBracketDeadline } from "../lib/bracketAccess";
 import React, {
   useEffect,
   useMemo,
@@ -190,7 +191,10 @@ export const BracketPage: React.FC = () => {
   const [bracketName, setBracketName] = useState("");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false); // ✅ single declaration
-  const [playoffsLocked, setPlayoffsLocked] = useState(false);
+  const [serverLocked, setPlayoffsLocked] = useState(false);
+  const [deadline, setDeadline] = useState<string | null>(null);
+  const [flagsReady, setFlagsReady] = useState(false);
+  const playoffsLocked = useBracketDeadline(serverLocked, deadline);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const handleNavClick = (path: string) => {
@@ -204,6 +208,8 @@ export const BracketPage: React.FC = () => {
         const info: any = await get("/brackets/me");
         if (info && typeof info.playoffs_locked === "boolean") {
           setPlayoffsLocked(info.playoffs_locked);
+          setDeadline(info.playoffs_deadline_utc ?? null);
+          setFlagsReady(true);
         }
       } catch (err) {
         console.error("Failed to fetch playoff flags", err);
@@ -229,10 +235,9 @@ export const BracketPage: React.FC = () => {
   const isAdmin = !!(user as any)?.is_admin;
   const isMaster = Boolean(bracket?.is_master) || Boolean((bracket as any)?.isMaster);
 
-  // Owner can edit their own; Admin can edit the master
-  const canEdit = isOwner || (isAdmin && isMaster);
-  
-  const savingLockedForUser = playoffsLocked && !isAdmin;
+  const { canEdit, canManage, savingLockedForUser } = bracketContentAccess({
+    isOwner, isAdmin, isMaster, locked: playoffsLocked, ready: flagsReady,
+  });
 
   const formatDate = (iso?: string | null) => {
     if (!iso) return "-";
@@ -257,23 +262,6 @@ export const BracketPage: React.FC = () => {
       if (!opts?.silent) setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const fetchFlags = async () => {
-      try {
-        const mineEnv: any = await get("/brackets/me");
-        if (mineEnv && typeof mineEnv.playoffs_locked === "boolean") {
-          setPlayoffsLocked(Boolean(mineEnv.playoffs_locked));
-        }
-      } catch (err) {
-        console.error("Failed to fetch playoffs flags", err);
-      }
-    };
-
-    fetchFlags();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
 
   useEffect(() => {
     loadBracket();
@@ -491,9 +479,7 @@ export const BracketPage: React.FC = () => {
   };
 
   const handleUndo = async (match: Match) => {
-    if (!bracketId || !matches) return;
-    // only admin+master can undo
-    if (!(isAdmin && isMaster)) return;
+    if (!bracketId || !matches || !canEdit) return;
 
     // 🔹 Optimistic UI: clear local pick immediately
     updateMatchInState(match.id, (m) => ({
@@ -909,19 +895,19 @@ export const BracketPage: React.FC = () => {
     return <div className="p-6 text-slate-100">Missing bracket id in URL.</div>;
   }
 
-  // Small component: visible only for admin+master AND when there's a pick already
+  // Available to an editable owner or master admin when a pick exists.
   const UndoButton: React.FC<{ match: Match; isUpdating: boolean }> = ({
     match,
     isUpdating,
   }) => {
     const hasPick = !!match.predicted_winner;
-    if (!(isAdmin && isMaster && hasPick)) return null;
+    if (!(canEdit && hasPick)) return null;
     return (
       <button
         onClick={() => handleUndo(match)}
         disabled={isUpdating}
         className="text-[11px] px-2 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
-        title="Undo this pick (master)"
+        title="Undo this pick"
       >
         Undo
       </button>
@@ -1185,7 +1171,12 @@ export const BracketPage: React.FC = () => {
                 </button>
               )}
 
-              {canEdit && (
+              {isOwner && savingLockedForUser && (
+                <p role="status" className="text-sm text-amber-300">
+                  Bracket locked. {bracket?.is_done ? "Your submitted predictions are frozen." : "This unsubmitted draft is frozen and competitively ineligible."}
+                </p>
+              )}
+              {canManage && (
                 <button
                   onClick={handleSaveBracket}
                   disabled={!canSave}
@@ -1385,7 +1376,7 @@ export const BracketPage: React.FC = () => {
 
                                         {/* Games + Undo row */}
                                         <div className="mt-1 flex justify-between items-center gap-2">
-                                          {(isAdmin && isMaster && !!winner) ? (
+                                          {(canEdit && !!winner) ? (
                                             <UndoButton match={m} isUpdating={isUpdating} />
                                           ) : (
                                             <span />
@@ -1586,7 +1577,7 @@ export const BracketPage: React.FC = () => {
                                         </div>
 
                                         <div className="mt-1 flex justify-between items-center gap-2">
-                                          {(isAdmin && isMaster && !!winner) ? (
+                                          {(canEdit && !!winner) ? (
                                             <UndoButton match={m} isUpdating={isUpdating} />
                                           ) : (
                                             <span />
@@ -1810,7 +1801,7 @@ export const BracketPage: React.FC = () => {
                                         </div>
 
                                         <div className="mt-1 flex justify-between items-center gap-2">
-                                          {(isAdmin && isMaster && !!winner) ? (
+                                          {(canEdit && !!winner) ? (
                                             <UndoButton match={m} isUpdating={isUpdating} />
                                           ) : (
                                             <span />
