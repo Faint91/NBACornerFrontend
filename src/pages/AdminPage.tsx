@@ -1,3 +1,4 @@
+import { useCurrentSeason } from "../season/useCurrentSeason";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -111,14 +112,8 @@ export const AdminPage: React.FC = () => {
 
   const isAdmin = !!user?.is_admin;
 
-  // Frontend current season code (from env, for hints / confirmations)
-  const CURRENT_SEASON_CODE = (
-    import.meta.env.VITE_CURRENT_SEASON_CODE ||
-    import.meta.env.VITE_CURRENT_SEASON ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
+  const { season, error: seasonError } = useCurrentSeason();
+  const CURRENT_SEASON_CODE = season?.season_code.toLowerCase() ?? "";
 
   // --- snapshot state ---
   const [snapshotConfirmOpen, setSnapshotConfirmOpen] = useState(false);
@@ -149,7 +144,7 @@ export const AdminPage: React.FC = () => {
 
   // Second: actual API call, triggered from ConfirmDialog
   const runSnapshot = async () => {
-    if (!user || !user.is_admin) return;
+    if (!user || !user.is_admin || !CURRENT_SEASON_CODE) return;
 
     setSnapshotLoading(true);
     setSnapshotError(null);
@@ -173,7 +168,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const runRollover = async () => {
-    if (!user || !user.is_admin) return;
+    if (!user || !user.is_admin || !CURRENT_SEASON_CODE) return;
 
     const trimmedNewCode = newSeasonCode.trim();
 
@@ -249,7 +244,7 @@ export const AdminPage: React.FC = () => {
       return "Only admins can use this action.";
     }
     if (!CURRENT_SEASON_CODE) {
-      return "CURRENT_SEASON_CODE is not configured in the frontend env.";
+      return "Canonical season configuration is unavailable.";
     }
     if (seasonCodeConfirm.trim().toLowerCase() !== CURRENT_SEASON_CODE) {
       return "Type the current season code to enable the button.";
@@ -260,7 +255,7 @@ export const AdminPage: React.FC = () => {
   // -------- ROLLOVER HANDLER --------
 
   const handleRollover = () => {
-    if (!user || !user.is_admin) return;
+    if (!user || !user.is_admin || !CURRENT_SEASON_CODE) return;
 
     const trimmedNewCode = newSeasonCode.trim();
     if (!trimmedNewCode) {
@@ -287,7 +282,7 @@ export const AdminPage: React.FC = () => {
       return "Only admins can use this action.";
     }
     if (!CURRENT_SEASON_CODE) {
-      return "CURRENT_SEASON_CODE is not configured in the frontend env.";
+      return "Canonical season configuration is unavailable.";
     }
     if (!newSeasonCode.trim()) {
       return "Enter the NEW season code to enable the button.";
@@ -503,6 +498,7 @@ export const AdminPage: React.FC = () => {
       </header>
 
       <main className="flex-1 p-6 space-y-8">
+        {seasonError && <p role="alert" className="text-red-400">{seasonError}</p>}
         {/* --- Section 1: Snapshot current season --- */}
         <section className="max-w-3xl mx-auto rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-sm shadow-slate-900/60">
           <h2 className="text-xl font-semibold mb-2">
@@ -630,14 +626,13 @@ export const AdminPage: React.FC = () => {
           <div className="space-y-4">
             <div className="text-xs text-slate-300 border border-slate-800/80 rounded-md p-3 bg-slate-950/40">
               <div>
-                <span className="font-semibold">Current season (env):</span>{" "}
+                <span className="font-semibold">Current season:</span>{" "}
                 <span className="font-mono">
                   {CURRENT_SEASON_CODE || "not set"}
                 </span>
               </div>
               <div className="mt-1">
-                The backend will resolve the season being closed from its
-                CURRENT_SEASON_* env vars. The new season code you enter below
+                The backend resolves the season being closed from its canonical database state. The new season code you enter below
                 will be used only for the new row in the{" "}
                 <span className="font-mono">seasons</span> table.
               </div>
@@ -670,7 +665,7 @@ export const AdminPage: React.FC = () => {
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
                   ISO-8601 in UTC. You can leave this empty and configure the
-                  env var later.
+                  season timing before activation.
                 </p>
               </div>
 
@@ -687,7 +682,7 @@ export const AdminPage: React.FC = () => {
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
                   ISO-8601 in UTC. You can leave this empty and configure the
-                  env var later.
+                  season timing before activation.
                 </p>
               </div>
             </div>
@@ -764,7 +759,7 @@ export const AdminPage: React.FC = () => {
                 {rolloverResult.env_next_actions && (
                   <div className="rounded-md border border-indigo-500/60 bg-indigo-950/40 px-3 py-2 text-xs text-indigo-100">
                     <div className="font-semibold mb-1">
-                      Next step: update backend env vars
+                      Requested target values — activation pending
                     </div>
                     {rolloverResult.env_next_actions.message && (
                       <div className="mb-1">
@@ -858,8 +853,7 @@ export const AdminPage: React.FC = () => {
                 .
               </p>
               <p className="text-xs text-slate-300">
-                You will still need to update backend env vars and redeploy
-                afterward for the new season to become active.
+                The new season requires a controlled activation after rollover. Creating the season row does not activate it.
               </p>
             </div>
           }

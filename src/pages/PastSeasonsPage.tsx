@@ -1,3 +1,4 @@
+import { loadCurrentSeason } from "../season/currentSeason";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -74,15 +75,6 @@ export const PastSeasonsPage: React.FC = () => {
     return year >= 2025;
   };
 
-  // Frontend current season code -> filter out of the dropdown
-  const CURRENT_SEASON_CODE = (
-    import.meta.env.VITE_CURRENT_SEASON_CODE ||
-    import.meta.env.VITE_CURRENT_SEASON ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
-
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -102,6 +94,8 @@ export const PastSeasonsPage: React.FC = () => {
         setLoadingSeasons(true);
         setSeasonsError(null);
 
+        const currentSeason = await loadCurrentSeason(() => get("/season"));
+        const CURRENT_SEASON_CODE = currentSeason.season_code.toLowerCase();
         const res = (await get(
           "/leaderboard/history"
         )) as HistoryIndexResponse;
