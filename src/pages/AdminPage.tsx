@@ -112,7 +112,7 @@ export const AdminPage: React.FC = () => {
 
   const isAdmin = !!user?.is_admin;
 
-  const { season, error: seasonError } = useCurrentSeason();
+  const { season, error: seasonError, refresh: refreshSeason } = useCurrentSeason();
   const CURRENT_SEASON_CODE = season?.season_code.toLowerCase() ?? "";
 
   // --- snapshot state ---
@@ -192,6 +192,7 @@ export const AdminPage: React.FC = () => {
         payload
       )) as RolloverResponse;
       setRolloverResult(resp);
+      if (resp.ok) refreshSeason();
     } catch (err: any) {
       const msg =
         err && typeof err.message === "string"
@@ -654,7 +655,7 @@ export const AdminPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Regular season end (UTC, optional)
+                  Regular season end (UTC, required)
                 </label>
                 <input
                   type="text"
@@ -664,14 +665,13 @@ export const AdminPage: React.FC = () => {
                   onChange={(e) => setRegSeasonEnd(e.target.value)}
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
-                  ISO-8601 in UTC. You can leave this empty and configure the
-                  season timing before activation.
+                  ISO-8601 in UTC. Required for canonical season activation.
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Playoffs start (UTC, optional)
+                  Playoffs start (UTC, required)
                 </label>
                 <input
                   type="text"
@@ -681,8 +681,7 @@ export const AdminPage: React.FC = () => {
                   onChange={(e) => setPlayoffsStart(e.target.value)}
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
-                  ISO-8601 in UTC. You can leave this empty and configure the
-                  season timing before activation.
+                  ISO-8601 in UTC. Required for canonical season activation.
                 </p>
               </div>
             </div>
@@ -759,7 +758,7 @@ export const AdminPage: React.FC = () => {
                 {rolloverResult.env_next_actions && (
                   <div className="rounded-md border border-indigo-500/60 bg-indigo-950/40 px-3 py-2 text-xs text-indigo-100">
                     <div className="font-semibold mb-1">
-                      Requested target values — activation pending
+                      Activated canonical season values
                     </div>
                     {rolloverResult.env_next_actions.message && (
                       <div className="mb-1">
@@ -853,7 +852,7 @@ export const AdminPage: React.FC = () => {
                 .
               </p>
               <p className="text-xs text-slate-300">
-                The new season requires a controlled activation after rollover. Creating the season row does not activate it.
+                Successful rollover activates the new canonical season and clears current standings. Both season timing fields are required.
               </p>
             </div>
           }

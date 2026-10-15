@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { buildAuthHeaders } from "../api/client";
 import { loadCurrentSeason } from "./currentSeason";
@@ -8,6 +8,11 @@ export function useCurrentSeason() {
   const { token } = useAuth();
   const [season, setSeason] = useState<SeasonStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
+  const refresh = useCallback(() => {
+    setSeason(null);
+    setRevision(value => value + 1);
+  }, []);
   useEffect(() => {
     const abort = new AbortController();
     loadCurrentSeason(async () => {
@@ -22,6 +27,6 @@ export function useCurrentSeason() {
       if (!abort.signal.aborted) { setSeason(null); setError("Season configuration unavailable"); }
     });
     return () => abort.abort();
-  }, [token]);
-  return { season, error };
+  }, [token, revision]);
+  return { season, error, refresh };
 }
