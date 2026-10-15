@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
@@ -24,6 +24,7 @@ type MatchPoints = {
 };
 
 type LeaderboardRow = {
+  rank: number;
   bracket_id: string;
   bracket_name: string | null;
   user_id: string;
@@ -56,22 +57,6 @@ type LeaderboardApiObject = {
 
 type LeaderboardResponseShape = LeaderboardApiObject | LeaderboardRow[];
 
-type MyBracketCore = {
-  bracket_id: string;
-  name?: string | null;
-  created_at?: string | null;
-  saved_at?: string | null;
-  is_done?: boolean;
-  user: {
-    id: string;
-    username: string;
-  };
-};
-
-type BracketsMeEnvelope = {
-  bracket: MyBracketCore | null;
-  playoffs_locked?: boolean;
-};
 
 const sortLeaguesByName = (leagues: LeagueSummary[]) =>
   [...leagues].sort((a, b) => {
@@ -301,12 +286,19 @@ export const LeaderboardPage: React.FC = () => {
     return classes.join(" ");
   };
 
+  const leaderboardRequest = useRef(0);
+  const initialLeaderboardScope = useRef(selectedLeagueId);
+
   const loadLeaderboard = async () => {
+    const requestId = ++leaderboardRequest.current;
     try {
       setError(null);
       setLoading(true);
 
-      const raw = (await get("/leaderboard")) as LeaderboardResponseShape;
+      const path = selectedLeagueId ? `/leaderboard?league_id=${encodeURIComponent(selectedLeagueId)}` : "/leaderboard";
+      const raw = (await get(path)) as LeaderboardResponseShape;
+
+      if (requestId !== leaderboardRequest.current) return;
 
       let rowsData: LeaderboardRow[] = [];
       let masterMeta: Record<string, MasterMatchupMeta> = {};
@@ -329,49 +321,26 @@ export const LeaderboardPage: React.FC = () => {
         bonus_champion: r.bonus_champion ?? 0,
       }));
 
-      // Sort: by Points desc, then Full hits desc
-      // Sort: total points desc → full hits desc → bracket saved_at asc
-      cleaned.sort((a, b) => {
-        const ptsA = a.total_points ?? 0;
-        const ptsB = b.total_points ?? 0;
-        if (ptsB !== ptsA) return ptsB - ptsA;
-
-        const fullA = a.full_hits ?? 0;
-        const fullB = b.full_hits ?? 0;
-        if (fullB !== fullA) return fullB - fullA;
-
-        // Final tiebreaker: earlier saved_at wins (bracket locked earlier)
-        const sa = a.saved_at || "";
-        const sb = b.saved_at || "";
-        if (sa && sb && sa !== sb) {
-          return sa < sb ? -1 : 1;
-        }
-        if (sa && !sb) return -1; // rows with saved_at come before those without
-        if (!sa && sb) return 1;
-
-        // Stable fallback: username, then bracket_id
-        const nameA = (a.username || "").toLowerCase();
-        const nameB = (b.username || "").toLowerCase();
-        if (nameA < nameB) return -1;
-        if (nameA > nameB) return 1;
-        return a.bracket_id.localeCompare(b.bracket_id);
-      });
-
+      // Competitive order and tie ranks are assigned by the backend.
       setRows(cleaned);
       setMasterMatchups(masterMeta);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Failed to load leaderboard");
+      if (requestId === leaderboardRequest.current) setError(err.message || "Failed to load leaderboard");
     } finally {
-      setLoading(false);
+      if (requestId === leaderboardRequest.current) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadLeaderboard();
+    // Fetch exactly when the competitive scope changes; stale responses are ignored.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-	trackEvent("leaderboard_viewed", {
-      league_type: selectedLeagueId ? "league" : "global",
+  }, [selectedLeagueId]);
+
+  useEffect(() => {
+    trackEvent("leaderboard_viewed", {
+      league_type: initialLeaderboardScope.current ? "league" : "global",
     });
   }, []);
 
@@ -387,27 +356,9 @@ export const LeaderboardPage: React.FC = () => {
       setRecomputing(true);
       setError(null);
 
-      // 1) Use this admin's bracket as master (via /brackets/me envelope)
-      const mineRaw = await get("/brackets/me");
-      const envelope: BracketsMeEnvelope | null =
-        mineRaw && typeof mineRaw === "object"
-          ? (mineRaw as BracketsMeEnvelope)
-          : null;
+      // Backend resolves the canonical season and active master.
+      await post("/admin/score/recompute", {});
 
-      const mine = envelope?.bracket;
-
-      if (!mine || !mine.bracket_id) {
-        throw new Error(
-          "You don't have a bracket to use as the master bracket. Create a bracket for this admin user first."
-        );
-      }
-
-      const masterId = mine.bracket_id;
-
-      // 2) Call recompute endpoint
-      await post(`/admin/score/master/${masterId}/recompute`, {});
-
-      // 3) Reload leaderboard
       await loadLeaderboard();
     } catch (err: any) {
       console.error("❌ handleRecompute error:", err);
@@ -878,7 +829,7 @@ export const LeaderboardPage: React.FC = () => {
                             false
                           )} text-center text-slate-200 text-[15px]`}
                         >
-                          {idx + 1}
+                          {r.rank}
                         </td>
               
                         {/* 2: Bracket (now linked) */}
