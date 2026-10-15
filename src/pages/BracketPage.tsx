@@ -7,7 +7,7 @@ import React, {
   useLayoutEffect,
   useRef,
 } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
 import { Footer } from "../components/layout/Footer";
@@ -31,6 +31,8 @@ type Bracket = {
   name?: string | null;
   owner?: Owner;
   is_owner?: boolean;
+  read_only?: boolean;
+  is_historical?: boolean;
   // server may send either of these:
   is_master?: boolean;
   isMaster?: boolean;
@@ -178,6 +180,7 @@ const debugMatchTeams = (match: Match) => {
 };
 
 export const BracketPage: React.FC = () => {
+  const historicalRoute = useLocation().pathname.startsWith("/history/bracket/");
   const { bracketId } = useParams<{ bracketId: string }>();
   const { user, logout } = useAuth();
   const { get, patch } = useApi();
@@ -204,6 +207,7 @@ export const BracketPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (historicalRoute) return;
     const fetchPlayoffFlags = async () => {
       try {
         const info: any = await get("/brackets/me");
@@ -236,9 +240,13 @@ export const BracketPage: React.FC = () => {
   const isAdmin = !!(user as any)?.is_admin;
   const isMaster = Boolean(bracket?.is_master) || Boolean((bracket as any)?.isMaster);
 
-  const { canEdit, canManage, savingLockedForUser } = bracketContentAccess({
+  const access = bracketContentAccess({
     isOwner, isAdmin, isMaster, locked: playoffsLocked, ready: flagsReady,
   });
+  const readOnly = historicalRoute || bracket?.read_only === true;
+  const canEdit = access.canEdit && !readOnly;
+  const canManage = access.canManage && !readOnly;
+  const savingLockedForUser = access.savingLockedForUser;
 
   const formatDate = (iso?: string | null) => {
     if (!iso) return "-";
@@ -252,7 +260,7 @@ export const BracketPage: React.FC = () => {
     try {
       if (!opts?.silent) setLoading(true);
       setError(null);
-      const data = (await get(`/bracket/${bracketId}`)) as BracketResponse;
+      const data = (await get(`${historicalRoute ? "/history" : ""}/bracket/${bracketId}`)) as BracketResponse;
       setBracket(data.bracket);
       setMatches(data.matches);
       setBracketName(data.bracket.name || "");
@@ -268,7 +276,7 @@ export const BracketPage: React.FC = () => {
   useEffect(() => {
     loadBracket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bracketId]);
+  }, [bracketId, historicalRoute]);
   
     // Optimistic UI helper: update a single match in local state
   const updateMatchInState = (
@@ -1007,6 +1015,7 @@ export const BracketPage: React.FC = () => {
                   <span>{bracket?.name || "Unnamed bracket"}</span>
                 )}
               </h1>
+              {readOnly && <p role="status" className="text-sm text-amber-300">Historical bracket — read only{!bracket?.is_done ? " / private draft" : ""}</p>}
               {bracket?.owner && (
                 <p className="text-sm text-slate-300">
                   Owner: <span className="font-semibold">{bracket.owner.username}</span>
@@ -1020,7 +1029,7 @@ export const BracketPage: React.FC = () => {
               )}
               {isMaster && (
                 <p className="text-[11px] text-indigo-300 mt-1">
-                  Viewing <b>MASTER</b> bracket {isAdmin ? "(admin-editable)" : ""}
+                  Viewing <b>MASTER</b> bracket {isAdmin && !readOnly ? "(admin-editable)" : ""}
                 </p>
               )}
             </div>

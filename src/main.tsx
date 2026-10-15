@@ -33,6 +33,7 @@ const RootApp: React.FC = () => {
         <Routes>
           {/* default route */}
           <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/history/bracket/:bracketId" element={<BracketPage />} />
           <Route path="/login" element={<LoginPage />} />
 		  <Route path="/register" element={<RegisterPage />} />
 		  <Route path="/reset-password" element={<ResetPasswordPage />} />

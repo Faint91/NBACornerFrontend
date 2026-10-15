@@ -13,6 +13,7 @@ type BracketListItem = {
   created_at: string | null;
   saved_at: string | null;
   is_done?: boolean;
+  is_master?: boolean;
   name?: string | null;
   user: {
     id: string;
@@ -22,6 +23,7 @@ type BracketListItem = {
 
 type MyBracketEnvelope = {
   bracket: BracketListItem | null;
+  master_exists?: boolean;
   playoffs_locked?: boolean;
   playoffs_deadline_utc?: string | null;
   bracket_creation_open?: boolean;
@@ -51,6 +53,7 @@ export const DashboardPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // server-driven flags
+  const [masterExists, setMasterExists] = useState(false);
   const [serverLocked, setPlayoffsLocked] = useState<boolean>(false);
   const [deadline, setDeadline] = useState<string | null>(null);
   const [flagsReady, setFlagsReady] = useState(false);
@@ -80,6 +83,7 @@ export const DashboardPage: React.FC = () => {
 
       const mine: BracketListItem | null = mineEnv.bracket ?? null;
       setMyBracket(mine);
+      setMasterExists(mineEnv.master_exists === true);
 
       // flags from backend (source of truth)
       setPlayoffsLocked(Boolean(mineEnv.playoffs_locked));
@@ -179,7 +183,9 @@ export const DashboardPage: React.FC = () => {
     try {
       setCreating(true);
       setError(null);
-      const resp = await post("/bracket/create", {});
+      const replacement = isAdmin && masterExists;
+      if (replacement && !window.confirm("Replace the active master bracket? The current master will be retired and its records retained.")) return;
+      const resp = await post("/bracket/create", replacement ? { replace_existing_master: true } : {});
       const newId = resp.bracket?.id;
       if (!newId) {
         throw new Error("No bracket id returned from API");
@@ -239,7 +245,7 @@ export const DashboardPage: React.FC = () => {
 
   // Admin creation retains the existing master-bracket window bypass.
   const createDisabled = bracketCreationDisabled({
-    creating, hasBracket: !!myBracket, isAdmin, creationOpen,
+    creating, hasBracket: !!myBracket && !(isAdmin && myBracket.is_master), isAdmin, creationOpen,
     locked: playoffsLocked, ready: flagsReady,
   });
 
@@ -460,7 +466,9 @@ export const DashboardPage: React.FC = () => {
               disabled={createDisabled}
               className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-sm"
             >
-              {myBracket
+              {isAdmin && masterExists
+                ? "Replace master bracket"
+                : myBracket
                 ? "You already have a bracket"
                 : creating
                 ? "Creating..."
@@ -526,7 +534,8 @@ export const DashboardPage: React.FC = () => {
                     e.stopPropagation(); // don't navigate when clicking delete
                     handleRequestDelete(myBracket.bracket_id);
                   }}
-                  disabled={deletingId === myBracket.bracket_id}
+                  disabled={deletingId === myBracket.bracket_id || myBracket.is_master || (playoffsLocked && myBracket.is_done)}
+                  title={myBracket.is_master ? "Replace the active master instead of deleting it" : playoffsLocked && myBracket.is_done ? "Submitted brackets cannot be deleted after the deadline" : undefined}
                   className="px-3 py-1 rounded-md bg-red-600 hover:bg-red-500 text-xs font-semibold text-white disabled:opacity-60"
                 >
                   {deletingId === myBracket.bracket_id ? "Deleting..." : "Delete my bracket"}
