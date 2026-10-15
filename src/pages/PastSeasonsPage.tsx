@@ -644,7 +644,7 @@ export const PastSeasonsPage: React.FC = () => {
                       const rank =
                         typeof row.rank === "number" && row.rank > 0
                           ? row.rank
-                          : idx + 1;
+                          : "—";
 
                       const baseBg =
                         idx % 2 === 0 ? "bg-slate-900" : "bg-slate-900/80";
