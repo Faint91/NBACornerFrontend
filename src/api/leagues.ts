@@ -30,7 +30,6 @@ export interface LeagueDetail extends LeagueSummary {
 export interface LeagueMember {
   user_id: string;
   username: string | null;
-  email: string | null;
   joined_at: string | null;
   is_owner: boolean;
   has_bracket: boolean;
@@ -61,6 +60,7 @@ export interface LeagueMembersResponse {
 export interface CreateLeaguePayload {
   name: string;
   password: string;
+  is_private?: boolean;
 }
 
 export interface JoinLeaguePayload {
@@ -70,12 +70,12 @@ export interface JoinLeaguePayload {
 // ----- Hook wrapping the leagues endpoints -----
 
 export function useLeaguesApi() {
-  const { get, post, del } = useApi();
+  const { get, post, patch, del } = useApi();
 
   return {
     /**
      * GET /leagues/me
-     * Returns leagues the current user belongs to (private only).
+     * Returns leagues the current user belongs to (public and private).
      */
     async getMyLeagues() {
       const data = (await get("/leagues/me")) as MyLeaguesResponse;
@@ -84,7 +84,7 @@ export function useLeaguesApi() {
 
     /**
      * GET /leagues
-     * Returns all private leagues, plus is_member flag per league.
+     * Returns discoverable leagues, plus is_member flag per league.
      */
     async getAllLeagues() {
       const data = (await get("/leagues")) as AllLeaguesResponse;
@@ -93,7 +93,7 @@ export function useLeaguesApi() {
 
     /**
      * POST /leagues
-     * Create a new private league (name + password).
+     * Create a public or private league (name + password).
      */
     async createLeague(payload: CreateLeaguePayload) {
       const data = (await post("/leagues", payload)) as { league: LeagueDetail };
@@ -102,7 +102,7 @@ export function useLeaguesApi() {
 
     /**
      * POST /leagues/:id/join
-     * Join a private league by password.
+     * Join a league; private leagues require a password.
      */
     async joinLeague(leagueId: string, password: string) {
       const body: JoinLeaguePayload = { password };
@@ -127,9 +127,19 @@ export function useLeaguesApi() {
      * DELETE /leagues/:id
      * Delete a league (owner-only).
      */
-    async deleteLeague(leagueId: string) {
-      const data = (await del(`/leagues/${leagueId}`)) as { league: LeagueDetail };
+    async deleteLeague(leagueId: string, confirmDelete: true) {
+      const data = (await del(`/leagues/${leagueId}`, { confirm_delete: confirmDelete })) as { league: LeagueDetail };
       return data.league;
+    },
+
+    async updateLeague(leagueId: string, settings: { name?: string; is_private?: boolean; password?: string }) {
+      return patch(`/leagues/${leagueId}`, settings);
+    },
+    async transferOwnership(leagueId: string, targetUserId: string) {
+      return post(`/leagues/${leagueId}/ownership`, { target_user_id: targetUserId });
+    },
+    async removeMember(leagueId: string, targetUserId: string) {
+      return del(`/leagues/${leagueId}/members/${targetUserId}`);
     },
 
     /**

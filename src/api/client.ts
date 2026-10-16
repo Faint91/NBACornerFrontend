@@ -64,10 +64,11 @@ export function useApi() {
   }
 
   // ✅ Proper DELETE helper
-  async function del(path: string) {
+  async function del(path: string, body?: unknown) {
     const resp = await fetch(`${API_URL}${path}`, {
       method: "DELETE",
       headers: buildAuthHeaders(token),
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(data.error || "Request failed");

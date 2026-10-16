@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary, LeagueMember } from "../api/leagues";
+import { LeagueOwnerControls } from "../components/leagues/LeagueOwnerControls";
 import { Footer } from "../components/layout/Footer";
 
 export const LeagueInfoPage: React.FC = () => {
@@ -168,6 +169,7 @@ export const LeagueInfoPage: React.FC = () => {
         name,
         // For public leagues we explicitly send empty string so backend treats it as public
         password: isPrivate ? password : "",
+        is_private: isPrivate,
       };
 
       const createdLeague = await createLeague(payload);
@@ -257,7 +259,7 @@ export const LeagueInfoPage: React.FC = () => {
     try {
       setLoadingMembers(true);
       setMembersError(null);
-      await deleteLeague(selectedLeagueId);
+      await deleteLeague(selectedLeagueId, true);
 
       // Remove league locally and reset selection
       setMyLeagues((prev) => prev.filter((l) => l.id !== selectedLeagueId));
@@ -567,6 +569,7 @@ export const LeagueInfoPage: React.FC = () => {
                     }}
                     className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="Enter league name"
+                    maxLength={80}
                     value={newLeagueName}
                     onChange={(e) => setNewLeagueName(e.target.value)}
                   />
@@ -583,6 +586,7 @@ export const LeagueInfoPage: React.FC = () => {
                       autoComplete="off"
                       className="w-full text-sm px-2 py-1 rounded-md bg-slate-900 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       placeholder="Enter password"
+                      maxLength={128}
                       value={newLeaguePassword}
                       onChange={(e) => setNewLeaguePassword(e.target.value)}
                     />
@@ -694,6 +698,22 @@ export const LeagueInfoPage: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {iAmOwner && myLeagues.find((league) => league.id === selectedLeagueId) && (
+                  <LeagueOwnerControls
+                    key={selectedLeagueId}
+                    league={myLeagues.find((league) => league.id === selectedLeagueId)!}
+                    members={members}
+                    onChanged={async () => {
+                      const [leagues, response] = await Promise.all([
+                        getMyLeagues(), getLeagueMembers(selectedLeagueId),
+                      ]);
+                      setMyLeagues(leagues);
+                      setMembers(response.members);
+                      setSelectedLeagueName(response.league.name);
+                    }}
+                  />
+                )}
 
                 {/* League summary box */}
                 <div className="mt-1 rounded-md bg-slate-800/70 border border-slate-700 px-3 py-2 text-xs text-slate-200">
