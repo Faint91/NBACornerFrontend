@@ -1,3 +1,4 @@
+import { loginPayload } from "../auth/identityPolicy";
 // src/api/auth.ts
 import { apiPost } from "./client";
 
@@ -15,19 +16,7 @@ export interface LoginResponse {
 }
 
 export async function login(identifier: string, password: string): Promise<LoginResponse> {
-  const trimmed = identifier.trim();
-  const isEmail = trimmed.includes("@");
-
-  const body: Record<string, string> = {
-    password,
-  };
-
-  // Backend expects { "email" OR "username", "password" }
-  if (isEmail) {
-    body.email = trimmed;
-  } else {
-    body.username = trimmed;
-  }
+  const body = loginPayload(identifier, password);
 
   return apiPost("/auth/login", body);
 }

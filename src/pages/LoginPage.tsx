@@ -1,3 +1,4 @@
+import { loginPayload, loginError } from "../auth/identityPolicy";
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -25,14 +26,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const trimmed = identifier.trim();
-      const payload: Record<string, string> = { password };
-
-      if (trimmed.includes("@")) {
-        payload.email = trimmed;
-      } else {
-        payload.username = trimmed;
-      }
+      const payload = loginPayload(identifier, password);
 
       const resp = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
@@ -43,7 +37,7 @@ export const LoginPage: React.FC = () => {
       const data = await resp.json();
 
       if (!resp.ok) {
-        setStatus(data.error || "Login failed");
+        setStatus(loginError(resp.status));
         setLoading(false);
         return;
       }

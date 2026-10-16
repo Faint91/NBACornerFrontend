@@ -1,3 +1,4 @@
+import { registrationPayload, registrationError } from "../auth/identityPolicy";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent } from "../lib/analytics";
@@ -23,23 +24,24 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+    let payload;
+    try {
+      payload = registrationPayload(email, username, password);
+    } catch {
+      setStatus("Password must contain 8 to 128 characters");
+      return;
+    }
     setLoading(true);
 
     try {
       const resp = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          username,
-          password,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await resp.json();
-
       if (!resp.ok) {
-        setStatus(data.error || "Registration failed");
+        setStatus(registrationError(resp.status));
         setLoading(false);
         return;
       }
