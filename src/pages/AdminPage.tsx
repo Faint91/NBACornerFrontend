@@ -81,6 +81,10 @@ type RolloverStep = {
 };
 
 type RolloverResponse = {
+  state?: "completed" | "already_completed" | "failed" | "busy";
+  audit_id?: string;
+  stage?: string;
+  legacy_warning?: boolean;
   ok?: boolean;
   status?: number;
   error?: string;
@@ -274,7 +278,19 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
-    // Open custom confirm dialog (no more window.confirm)
+    const start = Number(CURRENT_SEASON_CODE.slice(0, 4)) + 1;
+    const immediateTarget = `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+    if (trimmedNewCode !== immediateTarget) {
+      setRolloverError(`Only the immediate next season ${immediateTarget} is allowed.`);
+      return;
+    }
+    if (!regSeasonEnd.trim() || !playoffsStart.trim() ||
+        !Number.isFinite(Date.parse(regSeasonEnd)) || !Number.isFinite(Date.parse(playoffsStart)) ||
+        Date.parse(regSeasonEnd) >= Date.parse(playoffsStart)) {
+      setRolloverError("Both target times are required; bracket opening must precede playoff lock.");
+      return;
+    }
+    // Explicit confirmation remains required.
     setRolloverConfirmOpen(true);
   };
 
@@ -617,9 +633,9 @@ export const AdminPage: React.FC = () => {
           <p className="text-sm text-slate-200 mb-4">
             This will{" "}
             <span className="font-semibold text-red-200">
-              snapshot the current global leaderboard, delete all matches and
-              scores for the current season, soft-delete its brackets, and
-              create a new season row
+              finalize the leaderboard, permanently delete unsaved source-season brackets,
+              preserve saved brackets and their match graphs as read-only history,
+              clear current scores, and activate the immediate next season
             </span>
             . Use this only once per season, when everything is final.
           </p>
@@ -633,7 +649,7 @@ export const AdminPage: React.FC = () => {
                 </span>
               </div>
               <div className="mt-1">
-                The backend resolves the season being closed from its canonical database state. The new season code you enter below
+                Immediate next season: {CURRENT_SEASON_CODE ? `${Number(CURRENT_SEASON_CODE.slice(0, 4)) + 1}-${String((Number(CURRENT_SEASON_CODE.slice(0, 4)) + 2) % 100).padStart(2, "0")}` : "unavailable"}. The backend resolves the season being closed from its canonical database state. The new season code you enter below
                 will be used only for the new row in the{" "}
                 <span className="font-mono">seasons</span> table.
               </div>
@@ -714,7 +730,7 @@ export const AdminPage: React.FC = () => {
               <div className="space-y-3">
                 <SuccessMessage>
                   <div className="font-semibold mb-0.5">
-                    Season rollover completed successfully.
+                    {rolloverResult.state === "already_completed" ? "This season transition was already completed; no changes made." : "Season rollover completed successfully."}
                   </div>
                   <div>
                     Closed season:{" "}
@@ -732,6 +748,8 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </SuccessMessage>
 
+                {rolloverResult.audit_id && <p className="text-xs mt-2">Rollover audit: {rolloverResult.audit_id}</p>}
+                {rolloverResult.legacy_warning && <p className="text-amber-200">Structured history is complete. Optional legacy history needs review.</p>}
                 {rolloverResult.steps && rolloverResult.steps.length > 0 && (
                   <div className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-100">
                     <div className="font-semibold mb-1">
@@ -845,14 +863,14 @@ export const AdminPage: React.FC = () => {
               <p>
                 This will{" "}
                 <span className="font-semibold text-red-200">
-                  snapshot the current global leaderboard, delete all matches
-                  and scores for the current season, soft-delete its brackets,
-                  and create a new season row
+                  finalize the leaderboard, permanently delete unsaved source-season brackets,
+                  preserve saved brackets and their match graphs as read-only history,
+                  clear current scores, and activate the immediate next season
                 </span>
                 .
               </p>
               <p className="text-xs text-slate-300">
-                Successful rollover activates the new canonical season and clears current standings. Both season timing fields are required.
+                Successful rollover activates the new canonical season and clears current standings. Both season timing fields are required. Unsaved drafts are permanently deleted; saved brackets remain historical. A completed master and verified final snapshot are required.
               </p>
             </div>
           }
