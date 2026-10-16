@@ -57,6 +57,17 @@ export interface LeagueMembersResponse {
   members: LeagueMember[];
 }
 
+export interface LeagueHistorySeason { season_code: string; finalized_at: string; competitors: number; }
+export interface LeagueHistoryRow {
+  rank: number; display_order: number; display_name: string; total_points: number;
+  full_hits: number; partial_hits: number; misses: number; bonus_finalists: number;
+  bonus_champion: number; saved_at: string | null;
+}
+export interface LeagueHistoryResponse {
+  league: { id: string; name: string; requires_password: boolean };
+  season_code: string; finalized_at: string; rows: LeagueHistoryRow[];
+}
+
 export interface CreateLeaguePayload {
   name: string;
   password: string;
@@ -130,6 +141,13 @@ export function useLeaguesApi() {
     async deleteLeague(leagueId: string, confirmDelete: true) {
       const data = (await del(`/leagues/${leagueId}`, { confirm_delete: confirmDelete })) as { league: LeagueDetail };
       return data.league;
+    },
+
+    async getLeagueHistorySeasons(leagueId: string) {
+      return get(`/leagues/${leagueId}/history`) as Promise<{ seasons: LeagueHistorySeason[] }>;
+    },
+    async getLeagueHistory(leagueId: string, seasonCode: string) {
+      return get(`/leagues/${leagueId}/history/${encodeURIComponent(seasonCode)}`) as Promise<LeagueHistoryResponse>;
     },
 
     async updateLeague(leagueId: string, settings: { name?: string; is_private?: boolean; password?: string }) {

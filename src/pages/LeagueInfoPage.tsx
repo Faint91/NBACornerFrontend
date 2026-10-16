@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary, LeagueMember } from "../api/leagues";
+import { LeagueHistoryPanel } from "../components/leagues/LeagueHistoryPanel";
 import { LeagueOwnerControls } from "../components/leagues/LeagueOwnerControls";
 import { Footer } from "../components/layout/Footer";
 
@@ -24,6 +25,7 @@ export const LeagueInfoPage: React.FC = () => {
   const currentUserId = (user as any)?.id as string | undefined;
 
   const [myLeagues, setMyLeagues] = useState<LeagueSummary[]>([]);
+  const [historicalLeagueView, setHistoricalLeagueView] = useState(false);
   const [members, setMembers] = useState<LeagueMember[]>([]);
 
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
@@ -93,6 +95,7 @@ export const LeagueInfoPage: React.FC = () => {
 
   // Load members whenever selectedLeagueId changes
   useEffect(() => {
+    setHistoricalLeagueView(false);
     if (!selectedLeagueId) {
       setMembers([]);
       setMembersError(null);
@@ -645,7 +648,9 @@ export const LeagueInfoPage: React.FC = () => {
           </p>
         )}
 
-        {selectedLeagueId && (
+        {selectedLeagueId && <LeagueHistoryPanel key={selectedLeagueId} leagueId={selectedLeagueId} onHistoricalChange={setHistoricalLeagueView} />}
+
+        {selectedLeagueId && !historicalLeagueView && (
           <>
             {loadingMembers && (
               <p className="text-sm text-slate-300">
