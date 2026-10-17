@@ -1,7 +1,12 @@
 /** G1 form policy; PostgreSQL owns identity comparison and backend validation. */
-export function registrationPayload(email: string, username: string, password: string) {
+export function validateAccountPassword(password: string) {
   const count = Array.from(password).length;
   if (count < 8 || count > 128) throw new Error("Password must contain 8 to 128 characters");
+  return password;
+}
+
+export function registrationPayload(email: string, username: string, password: string) {
+  validateAccountPassword(password);
   return { email: email.trim(), username: username.trim(), password };
 }
 

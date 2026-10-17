@@ -2,6 +2,18 @@
 <html lang="en">
   <head>
 	<link rel="icon" type="image/png" href="/icon2.png" sizes="192x192" />
+    <!-- Capture reset credentials before any analytics initialization. Memory only. -->
+    <script>
+      (() => {
+        const url = new URL(window.location.href);
+        if (url.pathname === '/reset-password' && url.searchParams.has('token')) {
+          const tokens = url.searchParams.getAll('token');
+          window.__ncResetLink = { token: tokens.length === 1 ? tokens[0] : '', present: true };
+          url.searchParams.delete('token');
+          window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+        }
+      })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJBTY2XQ8D"></script>
     <script>

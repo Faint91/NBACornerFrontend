@@ -29,7 +29,7 @@ export async function apiPost(path: string, body: unknown) {
 
 // Small hook for convenience
 export function useApi() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
   async function get(path: string) {
     const resp = await fetch(`${API_URL}${path}`, {
@@ -37,6 +37,7 @@ export function useApi() {
       headers: buildAuthHeaders(token),
     });
     const data = await resp.json();
+    if (resp.status === 401 && token) logout();
     if (!resp.ok) throw new Error(data.error || "Request failed");
     return data;
   }
@@ -48,6 +49,7 @@ export function useApi() {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await resp.json();
+    if (resp.status === 401 && token) logout();
     if (!resp.ok) throw new Error(data.error || "Request failed");
     return data;
   }
@@ -59,6 +61,7 @@ export function useApi() {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await resp.json();
+    if (resp.status === 401 && token) logout();
     if (!resp.ok) throw new Error(data.error || "Request failed");
     return data;
   }
@@ -71,6 +74,7 @@ export function useApi() {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const data = await resp.json().catch(() => ({}));
+    if (resp.status === 401 && token) logout();
     if (!resp.ok) throw new Error(data.error || "Request failed");
     return data;
   }

@@ -1,116 +1,66 @@
-// src/pages/ResetPasswordPage.tsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useApi } from "../api/client";
+import { Link } from "react-router-dom";
+import { apiPost } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import { validateAccountPassword } from "../auth/identityPolicy";
+import { resetLink, clearResetLink } from "../auth/resetLink";
 
 export const ResetPasswordPage: React.FC = () => {
-  const navigate = useNavigate();
-  const api = useApi();
-
+  const { logout } = useAuth();
+  const [link] = useState(resetLink);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const completing = Boolean(link?.present);
 
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setErrorMessage("Please enter your email address.");
-      setSuccessMessage(null);
-      return;
-    }
-
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    if (completing) {
+      if (!link || !/^[A-Za-z0-9_-]{43}$/.test(link.token)) {
+        setError("Invalid or expired reset link"); return;
+      }
+      try { validateAccountPassword(password); }
+      catch { setError("Password must contain 8 to 128 characters"); return; }
+      if (password !== confirmation) { setError("Passwords do not match"); return; }
+    } else if (!email.trim()) { setError("Enter your email address"); return; }
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      setErrorMessage(null);
-      setSuccessMessage(null);
+      await apiPost(completing ? "/auth/reset-password" : "/auth/forgot-password",
+        completing ? { token: link?.token, new_password: password } : { email: email.trim() });
+      if (completing) { clearResetLink(); logout(); setPassword(""); setConfirmation(""); }
+      setSuccess(true);
+    } catch {
+      setError(completing ? "Invalid or expired reset link, or reset temporarily unavailable. Open the latest email link and try again." : "Reset request unavailable. Please try again later.");
+    } finally { setSubmitting(false); }
+  }
 
-      // Assumes backend has POST /auth/request-password-reset
-      await api.post("/auth/forgot-password", { email: trimmed });
-
-      // Generic message so we don't reveal whether the email exists or not
-      setSuccessMessage(
-        "If an account exists with that email, we've sent instructions to reset your password."
-      );
-    } catch (err: any) {
-      setErrorMessage(
-        err?.message || "Something went wrong. Please try again."
-      );
-      setSuccessMessage(null);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  const inputClass = "w-full text-sm px-3 py-2 rounded-md bg-slate-950 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500";
   return (
     <div className="min-h-screen text-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-xl bg-slate-900/80 border border-slate-800 p-6 shadow-xl">
-        <div className="mb-4 text-center">
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="text-xl font-semibold tracking-tight hover:text-slate-50"
-          >
-            NBA Corner
-          </button>
-        </div>
-
-        <h1 className="text-lg font-semibold mb-1 text-center">
-          Reset your password
-        </h1>
-        <p className="text-xs text-slate-400 mb-4 text-center">
-          Enter the email you used to create your account and we&apos;ll send
-          you a link to reset your password.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="reset-email"
-              className="block text-xs text-slate-300 mb-1"
-            >
-              Email address
-            </label>
-            <input
-              id="reset-email"
-              type="email"
-              name="email"
-              autoComplete="email"
-              className="w-full text-sm px-3 py-2 rounded-md bg-slate-950 border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          {errorMessage && (
-            <p className="text-xs text-red-400">{errorMessage}</p>
-          )}
-          {successMessage && (
-            <p className="text-xs text-emerald-400">{successMessage}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full text-sm px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {submitting ? "Sending reset link..." : "Send reset link"}
-          </button>
-        </form>
-
-        <div className="mt-4 text-xs text-slate-400 text-center">
-          Remembered your password?{" "}
-          <Link
-            to="/login"
-            className="text-indigo-300 hover:text-indigo-200"
-          >
-            Go back to login
-          </Link>
-        </div>
+        <h1 className="text-lg font-semibold mb-4 text-center">Reset your password</h1>
+        {success ? <p role="status" className="text-emerald-400">{completing ? "Password reset successfully. Log in with your new password." : "If an account matches, reset instructions will be sent."}</p> : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {completing ? <>
+              <p className="text-xs text-slate-400">Use 8–128 characters. Spaces count. If you refresh this page, reopen the original email link.</p>
+              <label className="block" htmlFor="new-password">New password</label>
+              <input id="new-password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} className={inputClass} required />
+              <label className="block" htmlFor="confirm-password">Confirm new password</label>
+              <input id="confirm-password" type="password" autoComplete="new-password" value={confirmation} onChange={e => setConfirmation(e.target.value)} className={inputClass} required />
+            </> : <>
+              <p className="text-xs text-slate-400">Enter your account email to request a reset link.</p>
+              <label className="block" htmlFor="reset-email">Email address</label>
+              <input id="reset-email" type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} required />
+            </>}
+            {error && <p role="alert" className="text-red-400">{error}</p>}
+            <button type="submit" disabled={submitting} className="w-full px-3 py-2 rounded-md bg-indigo-600 disabled:opacity-60">{submitting ? "Please wait…" : completing ? "Set new password" : "Send reset link"}</button>
+          </form>
+        )}
+        <Link to="/login" className="block mt-4 text-indigo-300">Go to login</Link>
       </div>
     </div>
   );
