@@ -488,12 +488,12 @@ export const LeaderboardPage: React.FC = () => {
             )}
             <button
               onClick={() => {
-                logout();
+                if (user) logout();
                 navigate("/login");
               }}
               className="text-sm px-3 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
             >
-              Logout
+              {user ? "Logout" : "Sign in"}
             </button>
           </div>
       
@@ -607,12 +607,12 @@ export const LeaderboardPage: React.FC = () => {
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    logout();
+                    if (user) logout();
 					navigate("/login");
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md border border-slate-600 hover:bg-slate-800"
                 >
-                  Logout
+                  {user ? "Logout" : "Sign in"}
                 </button>
               </div>
             </nav>

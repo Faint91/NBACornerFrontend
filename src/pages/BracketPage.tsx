@@ -9,6 +9,8 @@ import React, {
 } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useProtectedNavigation } from "../auth/useProtectedNavigation";
+import { SignInRequiredDialog } from "../components/auth/SignInRequiredDialog";
 import { useApi } from "../api/client";
 import { Footer } from "../components/layout/Footer";
 import { trackEvent } from "../lib/analytics";
@@ -185,6 +187,8 @@ export const BracketPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { get, patch } = useApi();
   const navigate = useNavigate();
+  const { navigateProtected, prompt } = useProtectedNavigation();
+  const navigatePublicProtected = historicalRoute ? navigateProtected : navigate;
 
   const [bracket, setBracket] = useState<Bracket | null>(null);
   const [matches, setMatches] = useState<MatchesByConfRound | null>(null);
@@ -806,7 +810,7 @@ export const BracketPage: React.FC = () => {
           <div className="flex items-center gap-6">
             {/* App title / logo → always goes to dashboard */}
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigatePublicProtected("/dashboard")}
               className="text-xl font-semibold tracking-tight hover:text-slate-100"
             >
               NBA Corner
@@ -815,19 +819,19 @@ export const BracketPage: React.FC = () => {
             {/* Top navigation - desktop only */}
             <nav className="hidden md:flex items-center gap-2">
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigatePublicProtected("/dashboard")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Dashboard
               </button>
               <button
-                onClick={() => navigate("/leagues/info")}
+                onClick={() => navigatePublicProtected("/leagues/info")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 My Leagues
               </button>
               <button
-                onClick={() => navigate("/leagues/find")}
+                onClick={() => navigatePublicProtected("/leagues/find")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Find a League
@@ -853,7 +857,7 @@ export const BracketPage: React.FC = () => {
                 </button>
               )}
               <button
-                onClick={() => navigate("/account")}
+                onClick={() => navigatePublicProtected("/account")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Account
@@ -869,10 +873,10 @@ export const BracketPage: React.FC = () => {
               </span>
             )}
             <button
-              onClick={logout}
+              onClick={() => { if (user) logout(); else navigate("/login"); }}
               className="text-sm px-3 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
             >
-              Logout
+              {user ? "Logout" : "Sign in"}
             </button>
           </div>
       
@@ -911,7 +915,7 @@ export const BracketPage: React.FC = () => {
             <nav className="flex flex-col gap-1 px-6 py-3">
               <button
                 onClick={() => {
-                  navigate("/dashboard");
+                  navigatePublicProtected("/dashboard");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -920,7 +924,7 @@ export const BracketPage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  navigate("/leagues/info");
+                  navigatePublicProtected("/leagues/info");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -929,7 +933,7 @@ export const BracketPage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  navigate("/leagues/find");
+                  navigatePublicProtected("/leagues/find");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -976,7 +980,7 @@ export const BracketPage: React.FC = () => {
                 )}
 				<button
                   onClick={() => {
-                    navigate("/account");
+                    navigatePublicProtected("/account");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -986,11 +990,11 @@ export const BracketPage: React.FC = () => {
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    logout();
+                    if (user) logout(); else navigate("/login");
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md border border-slate-600 hover:bg-slate-800"
                 >
-                  Logout
+                  {user ? "Logout" : "Sign in"}
                 </button>
               </div>
             </nav>
@@ -1759,6 +1763,7 @@ export const BracketPage: React.FC = () => {
           </section>
         )}
       </main>
+	  <SignInRequiredDialog {...prompt} />
 	  <Footer />
     </div>
   );
