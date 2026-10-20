@@ -13,6 +13,7 @@ type User = {
 type AuthState = {
   user: User | null;
   token: string | null;
+  authReady: boolean;
   login: (args: { token: string; user: User }) => void;
   logout: () => void;
 };
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   // restore from localStorage (optional but handy)
   useEffect(() => {
@@ -35,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // ignore bad JSON
       }
     }
+    setAuthReady(true);
   }, []);
 
   const login = ({ token, user }: { token: string; user: User }) => {
@@ -56,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, authReady, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

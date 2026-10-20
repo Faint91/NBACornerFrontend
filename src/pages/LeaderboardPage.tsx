@@ -67,7 +67,7 @@ const sortLeaguesByName = (leagues: LeagueSummary[]) =>
 
 
 export const LeaderboardPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, token, authReady, logout } = useAuth();
   const { get, post } = useApi();
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,6 +111,19 @@ export const LeaderboardPage: React.FC = () => {
   
   useEffect(() => {
     let cancelled = false;
+    setLeaguesError(null);
+
+    if (!authReady || !token) {
+      setMyLeagues(authReady ? [] : null);
+      setIsLoadingLeagues(false);
+      if (authReady) {
+        setSelectedLeagueId(null);
+        setLeagueSelectionInitialized(false);
+        setSelectedLeagueMemberIds([]);
+        setMembersError(null);
+      }
+      return;
+    }
 
     const loadLeagues = async () => {
       try {
@@ -136,8 +149,9 @@ export const LeaderboardPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
+    // The API hook recreates its helpers on render; refetch only on auth changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authReady, token]);
 
   const loadLeagueMembers = async (leagueId: string | null) => {
     if (!leagueId) {
