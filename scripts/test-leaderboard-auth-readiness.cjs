@@ -47,8 +47,8 @@ function visible(node) {
   if (typeof node === "string" || typeof node === "number") return String(node);
   return !node || typeof node !== "object" ? "" : [node.props?.children].flat(Infinity).map(visible).join(" ");
 }
-function page({ ready = false, token = null, leagues } = {}) {
-  const h = hooks(), calls = [];
+function page({ ready = false, token = null, leagues, rows = [] } = {}) {
+  const h = hooks(), calls = [], navigations = [];
   let auth = { authReady: ready, token, user: token ? { id: "fixture", username: "Fixture" } : null, logout() { throw Error("Unexpected logout"); } };
   const authModule = { useAuth: () => auth };
   const api = load("src/api/client.ts", () => authModule, { fetch: async (url, options) => {
@@ -59,20 +59,24 @@ function page({ ready = false, token = null, leagues } = {}) {
       if (leagues) return leagues();
       return { ok: true, status: 200, json: async () => ({ leagues: [{ id: "league-a", name: "Fixture league" }] }) };
     }
-    return { ok: true, status: 200, json: async () => path.includes("/members") ? { members: [] } : { rows: [], master_matchups: {} } };
+    return { ok: true, status: 200, json: async () => path.includes("/members") ? { members: [] } : { rows, master_matchups: {} } };
   } });
   const leagueApi = load("src/api/leagues.ts", () => api);
+  const protectedNavigation = load("src/auth/useProtectedNavigation.ts", name =>
+    name === "react" ? h.react : name.includes("AuthContext") ? authModule : { useNavigate: () => (...args) => navigations.push(args) });
   const component = load("src/pages/LeaderboardPage.tsx", name => {
     if (name === "react") return h.react;
     if (name === "react/jsx-runtime") return h.jsx;
     if (name.includes("AuthContext")) return authModule;
+    if (name.includes("useProtectedNavigation")) return protectedNavigation;
+    if (name.includes("SignInRequiredDialog")) return { SignInRequiredDialog: "dialog" };
     if (name.includes("api/client")) return api;
     if (name.includes("api/leagues")) return leagueApi;
-    if (name.includes("react-router")) return { useNavigate: () => () => {}, useLocation: () => ({ state: null }) };
+    if (name.includes("react-router")) return { useNavigate: () => (...args) => navigations.push(args), useLocation: () => ({ state: null }) };
     return { Footer: "footer", trackEvent() {} };
   }).LeaderboardPage;
   h.render(component);
-  return { calls, h, async flush() {
+  return { calls, navigations, h, async flush() {
     for (let i = 0; i < 12; i++) { await new Promise(resolve => setImmediate(resolve)); if (h.dirty) h.render(component); }
   }, setAuth(next) { auth = { ...auth, ...next }; h.render(component); }, rerender() { h.render(component); } };
 }
@@ -135,4 +139,21 @@ test("auth provider distinguishes restoring, anonymous and restored sessions wit
     assert.equal(restored.authReady, true); assert.equal(restored.token, stored ? "synthetic" : null);
     assert.equal(writes.length, 0);
   }
+});
+
+
+test("anonymous leaderboard bracket prompt preserves rows and makes no protected request", async () => {
+  const p = page({ ready: true, rows: [{ bracket_id: "fixture-bracket", bracket_name: "Fixture bracket", rank: 1 }] }); await p.flush();
+  const before = p.calls.length;
+  nodes(p.h.tree).find(n => n.type === "button" && n.props["aria-label"] === "Open bracket Fixture bracket").props.onClick(); await p.flush();
+  const prompt = nodes(p.h.tree).find(n => n.type === "dialog"); assert.equal(prompt.props.open, true);
+  assert.match(prompt.props.message, /view this bracket/); assert.match(visible(p.h.tree), /Fixture bracket/);
+  assert.equal(p.navigations.length, 0); assert.equal(p.calls.length, before);
+  prompt.props.onDismiss(); await p.flush(); assert.equal(nodes(p.h.tree).find(n => n.type === "dialog").props.open, false);
+  assert.equal(p.calls.length, before); assert.equal(p.navigations.length, 0);
+});
+test("authenticated leaderboard bracket click proceeds directly without a prompt", async () => {
+  const p = page({ ready: true, token: "synthetic", leagues: async () => ({ ok: true, status: 200, json: async () => ({ leagues: [] }) }), rows: [{ bracket_id: "fixture-bracket", bracket_name: "Fixture bracket", rank: 1 }] }); await p.flush();
+  nodes(p.h.tree).find(n => n.type === "button" && n.props["aria-label"] === "Open bracket Fixture bracket").props.onClick(); await p.flush();
+  assert.equal(p.navigations.at(-1)[0], "/bracket/fixture-bracket"); assert.equal(nodes(p.h.tree).find(n => n.type === "dialog").props.open, false);
 });

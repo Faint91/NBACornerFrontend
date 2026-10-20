@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useProtectedNavigation } from "../auth/useProtectedNavigation";
+import { SignInRequiredDialog } from "../components/auth/SignInRequiredDialog";
 import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
@@ -70,6 +72,7 @@ export const LeaderboardPage: React.FC = () => {
   const { user, token, authReady, logout } = useAuth();
   const { get, post } = useApi();
   const navigate = useNavigate();
+  const { navigateProtected, prompt } = useProtectedNavigation();
   const location = useLocation();
 
   const navState = (location.state as { leagueId?: string } | null) || null;
@@ -421,7 +424,7 @@ export const LeaderboardPage: React.FC = () => {
           <div className="flex items-center gap-6">
             {/* App title / logo → always goes to dashboard */}
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigateProtected("/dashboard")}
               className="text-xl font-semibold tracking-tight hover:text-slate-100"
             >
               NBA Corner
@@ -430,19 +433,19 @@ export const LeaderboardPage: React.FC = () => {
             {/* Top navigation - desktop only */}
             <nav className="hidden md:flex items-center gap-2">
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigateProtected("/dashboard")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Dashboard
               </button>
               <button
-                onClick={() => navigate("/leagues/info")}
+                onClick={() => navigateProtected("/leagues/info")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 My Leagues
               </button>
               <button
-                onClick={() => navigate("/leagues/find")}
+                onClick={() => navigateProtected("/leagues/find")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Find a League
@@ -461,14 +464,14 @@ export const LeaderboardPage: React.FC = () => {
               </button>
               {user?.is_admin && (
                 <button
-                  onClick={() => navigate("/admin")}
+                  onClick={() => navigateProtected("/admin")}
                   className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
                 >
                   Admin
                 </button>
               )}
               <button
-                onClick={() => navigate("/account")}
+                onClick={() => navigateProtected("/account")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
               >
                 Account
@@ -529,7 +532,7 @@ export const LeaderboardPage: React.FC = () => {
             <nav className="flex flex-col gap-1 px-6 py-3">
               <button
                 onClick={() => {
-                  navigate("/dashboard");
+                  navigateProtected("/dashboard");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -538,7 +541,7 @@ export const LeaderboardPage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  navigate("/leagues/info");
+                  navigateProtected("/leagues/info");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -547,7 +550,7 @@ export const LeaderboardPage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  navigate("/leagues/find");
+                  navigateProtected("/leagues/find");
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -576,7 +579,7 @@ export const LeaderboardPage: React.FC = () => {
               {user?.is_admin && (
                 <button
                   onClick={() => {
-                    navigate("/admin");
+                    navigateProtected("/admin");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -594,7 +597,7 @@ export const LeaderboardPage: React.FC = () => {
                 )}
 				<button
                   onClick={() => {
-                    navigate("/account");
+                    navigateProtected("/account");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
@@ -655,7 +658,7 @@ export const LeaderboardPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() =>
-                    navigate("/league-stats", {
+                    navigateProtected("/league-stats", {
                       state: {
                         leagueId: displayedLeagueId,
                         leagueName: selectedLeagueName,
@@ -854,7 +857,10 @@ export const LeaderboardPage: React.FC = () => {
                           )} text-slate-100 text-[15px]`}
                         >
                           <button
-                            onClick={() => navigate(`/bracket/${r.bracket_id}`)}
+                            onClick={() => navigateProtected(
+                              `/bracket/${r.bracket_id}`, undefined,
+                              "You need to sign in or create an account to view this bracket.",
+                            )}
                             className="underline underline-offset-2 hover:text-indigo-300"
                             aria-label={`Open bracket ${r.bracket_name || "Unnamed bracket"}`}
                           >
@@ -956,6 +962,7 @@ export const LeaderboardPage: React.FC = () => {
           </div>
         )}
       </main>
+      <SignInRequiredDialog {...prompt} />
 	  <Footer />
     </div>
   );
