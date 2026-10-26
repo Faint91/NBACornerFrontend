@@ -817,7 +817,7 @@ export const BracketPage: React.FC = () => {
             </button>
       
             {/* Top navigation - desktop only */}
-            <nav className="hidden md:flex items-center gap-2">
+            <nav className="hidden md:flex flex-wrap items-center gap-2">
               <button
                 onClick={() => navigatePublicProtected("/dashboard")}
                 className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
@@ -848,6 +848,12 @@ export const BracketPage: React.FC = () => {
               >
                 Past Seasons
               </button>
+              <a
+                href="https://1on1ball.com"
+                className="text-sm px-3 py-1 rounded-md border border-orange-500 bg-orange-400 text-slate-950 hover:border-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300"
+              >
+                Daily 1on1
+              </a>
               {user?.is_admin && (
                 <button
                   onClick={() => navigate("/admin")}
@@ -958,6 +964,13 @@ export const BracketPage: React.FC = () => {
               >
                 Past Seasons
               </button>
+              <a
+                href="https://1on1ball.com"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full min-w-0 min-h-11 flex items-center text-left text-sm px-3 py-2 rounded-md border border-orange-500 bg-orange-400 text-slate-950 hover:border-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300"
+              >
+                Daily 1on1
+              </a>
       
               {user?.is_admin && (
                 <button
