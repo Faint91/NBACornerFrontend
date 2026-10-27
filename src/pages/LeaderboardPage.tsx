@@ -1,5 +1,6 @@
+import { Header } from "../components/layout/Header";
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useProtectedNavigation } from "../auth/useProtectedNavigation";
 import { SignInRequiredDialog } from "../components/auth/SignInRequiredDialog";
@@ -69,9 +70,8 @@ const sortLeaguesByName = (leagues: LeagueSummary[]) =>
 
 
 export const LeaderboardPage: React.FC = () => {
-  const { user, token, authReady, logout } = useAuth();
+  const { user, token, authReady } = useAuth();
   const { get, post } = useApi();
-  const navigate = useNavigate();
   const { navigateProtected, prompt } = useProtectedNavigation();
   const location = useLocation();
 
@@ -97,20 +97,14 @@ export const LeaderboardPage: React.FC = () => {
   const [selectedLeagueMemberIds, setSelectedLeagueMemberIds] = useState<string[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (path: string) => {
-    navigate(path);
-    setIsMobileMenuOpen(false); // close menu after navigating
-  };
+
+
 
   const isAdmin = Boolean((user as any)?.is_admin);
   const currentUserId = (user as any)?.id as string | undefined;
   
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+
   
   useEffect(() => {
     let cancelled = false;
@@ -419,219 +413,7 @@ export const LeaderboardPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full overflow-x-hidden text-slate-100 flex flex-col">
       {/* Header (same style as dashboard) */}
-      <header className="border-b border-slate-800">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-6">
-            {/* App title / logo → always goes to dashboard */}
-            <button
-              onClick={() => navigateProtected("/dashboard")}
-              className="text-xl font-semibold tracking-tight hover:text-slate-100"
-            >
-              NBA Corner
-            </button>
-      
-            {/* Top navigation - desktop only */}
-            <nav className="hidden md:flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => navigateProtected("/dashboard")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => navigateProtected("/leagues/info")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                My Leagues
-              </button>
-              <button
-                onClick={() => navigateProtected("/leagues/find")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                Find a League
-              </button>
-              <button
-                onClick={() => navigate("/leaderboard")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                Leaderboards
-              </button>
-              <button
-                onClick={() => navigate("/past-seasons")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                Past Seasons
-              </button>
-              <a
-                href="https://1on1ball.com"
-                className="text-sm px-3 py-1 rounded-md border border-orange-500 bg-orange-400 text-slate-950 hover:border-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300"
-              >
-                Daily 1on1
-              </a>
-              {user?.is_admin && (
-                <button
-                  onClick={() => navigateProtected("/admin")}
-                  className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-                >
-                  Admin
-                </button>
-              )}
-              <button
-                onClick={() => navigateProtected("/account")}
-                className="text-sm px-3 py-1 rounded-md border border-transparent hover:bg-slate-800"
-              >
-                Account
-              </button>
-            </nav>
-          </div>
-      
-          {/* Right side: user info + logout - desktop only */}
-          <div className="hidden md:flex items-center gap-3">
-            {user && (
-              <span className="text-sm text-slate-300">
-                Logged in as <span className="font-semibold">{user.username}</span>
-              </span>
-            )}
-            <button
-              onClick={() => {
-                if (user) logout();
-                navigate("/login");
-              }}
-              className="text-sm px-3 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
-            >
-              {user ? "Logout" : "Sign in"}
-            </button>
-          </div>
-      
-          {/* Mobile hamburger button */}
-          <button
-            type="button"
-            className="inline-flex items-center rounded-md border border-slate-600 px-3 py-1 text-sm text-slate-100 hover:bg-slate-800 md:hidden"
-            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          >
-            <span className="mr-1">Menu</span>
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              {isMobileMenuOpen ? (
-                // X icon
-                <path
-                  fill="currentColor"
-                  d="M6.225 4.811 4.81 6.225 10.586 12l-5.775 5.775 1.414 1.414L12 13.414l5.775 5.775 1.414-1.414L13.414 12l5.775-5.775-1.414-1.414L12 10.586 6.225 4.81z"
-                />
-              ) : (
-                // Hamburger icon
-                <path
-                  fill="currentColor"
-                  d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"
-                />
-              )}
-            </svg>
-          </button>
-        </div>
-      
-        {/* Mobile menu panel */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-800 bg-slate-950/95">
-            <nav className="flex flex-col gap-1 px-6 py-3">
-              <button
-                onClick={() => {
-                  navigateProtected("/dashboard");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => {
-                  navigateProtected("/leagues/info");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-              >
-                My Leagues
-              </button>
-              <button
-                onClick={() => {
-                  navigateProtected("/leagues/find");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-              >
-                Find a League
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/leaderboard");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-              >
-                Leaderboards
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/past-seasons");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-              >
-                Past Seasons
-              </button>
-              <a
-                href="https://1on1ball.com"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full min-w-0 min-h-11 flex items-center text-left text-sm px-3 py-2 rounded-md border border-orange-500 bg-orange-400 text-slate-950 hover:border-orange-600 hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300"
-              >
-                Daily 1on1
-              </a>
-      
-              {user?.is_admin && (
-                <button
-                  onClick={() => {
-                    navigateProtected("/admin");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-                >
-                  Admin
-                </button>
-              )}
-      
-              <div className="mt-3 border-t border-slate-800 pt-2">
-                {user && (
-                  <div className="mb-1 text-xs text-slate-300">
-                    Logged in as{" "}
-                    <span className="font-semibold">{user.username}</span>
-                  </div>
-                )}
-				<button
-                  onClick={() => {
-                    navigateProtected("/account");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800"
-                >
-                  Account
-                </button>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    if (user) logout();
-					navigate("/login");
-                  }}
-                  className="w-full text-left text-sm px-3 py-2 rounded-md border border-slate-600 hover:bg-slate-800"
-                >
-                  {user ? "Logout" : "Sign in"}
-                </button>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
+      <Header onProtectedNavigate={navigateProtected} onAdminNavigate={navigateProtected} sessionBehavior="logout-and-redirect" />
       <main className="flex-1 p-6 space-y-4">
         {/* League filter (now above scores/controls) */}
         <div className="flex items-center mb-3">

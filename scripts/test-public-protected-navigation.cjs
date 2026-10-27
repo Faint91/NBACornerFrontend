@@ -33,7 +33,8 @@ function hooks() {
     },
     createContext: () => ({ Provider: "provider" }),
   };
-  const jsx = { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+  const element = (type, props) => typeof type === "function" ? type(props) : ({ type, props });
+  const jsx = { jsx: element, jsxs: element };
   return { react, jsx, render(component) {
     index = 0; dirty = false; tree = component();
     const effects = pending; pending = []; effects.forEach(effect => effect());
@@ -79,6 +80,7 @@ function surface(name, authenticated = false, historical = true) {
     if (dep === "react/jsx-runtime") return h.jsx;
     if (dep === "react-router-dom") return router;
     if (dep.includes("AuthContext")) return authModule;
+    if (dep.includes("layout/Header")) return moduleCache.header ??= load("src/components/layout/Header.tsx", resolver);
     if (dep.includes("useProtectedNavigation")) return moduleCache.helper ??= load("src/auth/useProtectedNavigation.ts", resolver);
     if (dep.includes("SignInRequiredDialog")) return { SignInRequiredDialog: "dialog" };
     if (dep.includes("api/client")) return { useApi: () => ({ get, post: () => { throw Error("Unexpected POST"); }, patch: () => { throw Error("Unexpected PATCH"); } }) };

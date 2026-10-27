@@ -33,7 +33,8 @@ function hooks() {
     },
     createContext: () => ({ Provider: "provider" }),
   };
-  const jsx = { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+  const element = (type, props) => typeof type === "function" ? type(props) : ({ type, props });
+  const jsx = { jsx: element, jsxs: element };
   return { react, jsx, render(component) {
     index = 0; dirty = false; tree = component();
     const effects = pending; pending = []; effects.forEach(effect => effect());
@@ -68,6 +69,13 @@ function page({ ready = false, token = null, leagues, rows = [] } = {}) {
     if (name === "react") return h.react;
     if (name === "react/jsx-runtime") return h.jsx;
     if (name.includes("AuthContext")) return authModule;
+    if (name.includes("layout/Header")) return load("src/components/layout/Header.tsx", dep => {
+      if (dep === "react") return h.react;
+      if (dep === "react/jsx-runtime") return h.jsx;
+      if (dep.includes("AuthContext")) return authModule;
+      if (dep === "react-router-dom") return { useNavigate: () => (...args) => navigations.push(args) };
+      throw Error("Unexpected header dependency: " + dep);
+    });
     if (name.includes("useProtectedNavigation")) return protectedNavigation;
     if (name.includes("SignInRequiredDialog")) return { SignInRequiredDialog: "dialog" };
     if (name.includes("api/client")) return api;
