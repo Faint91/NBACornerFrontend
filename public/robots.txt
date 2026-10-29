@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /1on1/api/
+Disallow: /1on1/stats/
+
+Sitemap: https://www.nbacorner.com/1on1/sitemap.xml
