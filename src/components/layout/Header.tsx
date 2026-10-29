@@ -17,7 +17,7 @@ const primaryNavigation: readonly NavigationItem[] = [
   { label: "Find a League", destination: "/leagues/find", protected: true },
   { label: "Leaderboards", destination: "/leaderboard" },
   { label: "Past Seasons", destination: "/past-seasons" },
-  { label: "Daily 1on1", destination: "https://1on1ball.com", external: true },
+  { label: "Daily 1on1", destination: "/1on1", external: true },
 ];
 const adminItem: NavigationItem = { label: "Admin", destination: "/admin" };
 const accountItem: NavigationItem = { label: "Account", destination: "/account", protected: true };

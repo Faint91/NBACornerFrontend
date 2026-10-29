@@ -52,7 +52,7 @@ for (const page of pages) for (const mobile of [false, true]) {
       assert.equal(labels[6], user?.is_admin ? "Admin" : "Account");
       const link = actions[5];
       assert.equal(link.type, "a");
-      assert.equal(link.props.href, "https://1on1ball.com");
+      assert.equal(link.props.href, "/1on1");
       assert.equal(link.props.target, undefined);
       assert.match(link.props.className, /(?:^| )bg-orange-400(?: |$)/);
       assert.match(link.props.className, /text-slate-950/);
@@ -67,6 +67,7 @@ for (const page of pages) for (const mobile of [false, true]) {
         assert.ok(nodes(menu).some(n => n.props?.className === "mt-3 border-t border-slate-800 pt-2"));
         link.props.onClick();
         assert.equal(h.isOpen(), false);
+        assert.deepEqual(h.events, [], "Daily 1on1 closes the menu without SPA navigation");
       } else {
         assert.equal(link.props.onClick, undefined);
         assert.match(menu.props.className, /hidden md:flex flex-wrap/);
@@ -121,4 +122,5 @@ test("no dashboard promotion, internal 1on1 route, or header API/storage depende
   assert.doesNotMatch(dashboard, /DailyOneOnOneCard|daily-one-on-one-title|Play Daily 1on1|The Daily Matchup/);
   assert.match(dashboard, /<main className="flex-1 p-6 space-y-6">\s*\{\/\* Top controls \*\/\}/);
   assert.doesNotMatch(sharedSource, /fetch\s*\(|useApi|localStorage|sessionStorage|auth_token|Authorization|target="_blank"/);
+  assert.doesNotMatch(sharedSource, /https:\/\/1on1ball\.com/);
 });
