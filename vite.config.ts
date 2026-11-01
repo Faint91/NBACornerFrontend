@@ -27,7 +27,11 @@ export default defineConfig(({ mode }) => {
       },
       generateBundle() {
         // Route-scoped Pages headers; no global framing/security change.
-        this.emitFile({ type: 'asset', fileName: '_headers', source: '/daily-stats-auth.html\n' + Object.entries(helperHeaders).map(([k,v]) => `  ${k}: ${v}`).join('\n') + '\n' })
+        // Pages redirects .html assets to clean URLs; protect the final document too.
+        const headers = Object.entries(helperHeaders).map(([k,v]) => `  ${k}: ${v}`).join('\n')
+        const source = ['/daily-stats-auth.html', '/daily-stats-auth']
+          .map(path => `${path}\n${headers}\n`).join('\n')
+        this.emitFile({ type: 'asset', fileName: '_headers', source })
       },
     }],
     build: { rollupOptions: { input: { main: resolve(process.cwd(), 'index.html'), dailyAuth: resolve(process.cwd(), 'daily-stats-auth.html') } } },
