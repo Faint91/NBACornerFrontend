@@ -2,6 +2,7 @@ import { loginPayload, loginError } from "../auth/identityPolicy";
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { dailyAuthPath, readDailyReturnPath } from "../auth/dailyReturnPath";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -9,16 +10,15 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const returnPath = readDailyReturnPath(location.search);
+  const registration = location.state as { email?: string; registered?: boolean } | null;
 
-  const [identifier, setIdentifier] = useState(() => {
-    const state = location.state as any;
-    return state?.email || "";
-  });
+  const [identifier, setIdentifier] = useState(() => registration?.email || "");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fromRegister = (location.state as any)?.registered;
+  const fromRegister = registration?.registered;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +42,12 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      // ✅ Save auth + go to dashboard
+      // Save the NBA session before handing off to the Daily document.
       login({ token: data.token, user: data.user });
       setStatus("Login successful");
       setLoading(false);
-      navigate("/dashboard");
+      if (returnPath) window.location.replace(returnPath);
+      else navigate("/dashboard");
     } catch (err) {
       console.error(err);
       setStatus("Network error");
@@ -147,7 +148,7 @@ export const LoginPage: React.FC = () => {
               Don&apos;t have an account?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/register")}
+                onClick={() => navigate(dailyAuthPath("/register", returnPath))}
                 className="text-indigo-300 hover:underline"
               >
                 Sign up for free
@@ -267,7 +268,7 @@ export const LoginPage: React.FC = () => {
             Don&apos;t have an account?{" "}
             <button
               type="button"
-              onClick={() => navigate("/register")}
+              onClick={() => navigate(dailyAuthPath("/register", returnPath))}
               className="text-indigo-300 hover:underline"
             >
               Sign up for free

@@ -1,12 +1,15 @@
 import { registrationPayload, registrationError } from "../auth/identityPolicy";
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { trackEvent } from "../lib/analytics";
+import { dailyAuthPath, readDailyReturnPath } from "../auth/dailyReturnPath";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const returnPath = readDailyReturnPath(useLocation().search);
+  const loginPath = dailyAuthPath("/login", returnPath);
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -48,7 +51,7 @@ export const RegisterPage: React.FC = () => {
 
       // ✅ On success, send them to login with a flag + email prefilled
 	  trackEvent("sign_up", { method: "password" });
-      navigate("/login", {
+      navigate(loginPath, {
         state: { registered: true, email },
         replace: true,
       });
@@ -172,7 +175,7 @@ export const RegisterPage: React.FC = () => {
               Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate(loginPath)}
                 className="text-indigo-300 hover:underline"
               >
                 Log in
@@ -308,7 +311,7 @@ export const RegisterPage: React.FC = () => {
             Already have an account?{" "}
             <button
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(loginPath)}
               className="text-indigo-300 hover:underline"
             >
               Log in
