@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useProtectedNavigation } from "../auth/useProtectedNavigation";
 import { SignInRequiredDialog } from "../components/auth/SignInRequiredDialog";
 import { useApi } from "../api/client";
+import { DailyDiscovery } from "../components/layout/DailyDiscovery";
 import { Footer } from "../components/layout/Footer";
 import { trackEvent } from "../lib/analytics";
 
@@ -1558,6 +1559,7 @@ export const BracketPage: React.FC = () => {
             </div>
           </section>
         )}
+        <div className="mt-6"><DailyDiscovery compact /></div>
       </main>
 	  <SignInRequiredDialog {...prompt} />
 	  <Footer />

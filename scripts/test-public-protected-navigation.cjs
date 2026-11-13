@@ -88,6 +88,7 @@ function surface(name, authenticated = false, historical = true) {
     if (dep.includes("currentSeason")) return moduleCache.season ??= load("src/season/currentSeason.ts", resolver);
     if (dep.includes("bracketAccess")) return moduleCache.access ??= load("src/lib/bracketAccess.ts", resolver);
     if (dep.includes("bracketValidity")) return moduleCache.validity ??= load("src/lib/bracketValidity.ts", resolver);
+    if (dep.includes("DailyDiscovery")) return { DailyDiscovery: "daily-discovery" };
     if (dep.includes("Footer")) return { Footer: "footer" };
     if (dep.includes("analytics")) return { trackEvent() {} };
     throw Error("Unexpected dependency: " + dep);

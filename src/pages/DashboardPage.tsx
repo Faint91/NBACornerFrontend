@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useApi } from "../api/client";
 import { useLeaguesApi } from "../api/leagues";
 import type { LeagueSummary } from "../api/leagues";
+import { DailyDiscovery } from "../components/layout/DailyDiscovery";
 import { Footer } from "../components/layout/Footer";
 import { trackEvent } from "../lib/analytics";
 
@@ -454,6 +455,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
         </section>
+        <DailyDiscovery />
       </main>
       <Footer />
       {/* Custom delete confirmation modal */}

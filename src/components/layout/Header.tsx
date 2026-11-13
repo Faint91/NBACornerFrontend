@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 
 type NavigateTo = (path: string) => void;
@@ -26,6 +26,7 @@ const desktopItemStyle = "text-sm px-3 py-1 rounded-md border border-transparent
 const mobileItemStyle = "w-full text-left text-sm px-3 py-2 rounded-md hover:bg-slate-800";
 
 type HeaderProps = {
+  homeBrand?: boolean;
   onProtectedNavigate?: NavigateTo;
   onAdminNavigate?: NavigateTo;
   // Preserve the existing public pages' distinct post-logout behavior.
@@ -33,15 +34,18 @@ type HeaderProps = {
 };
 
 export function Header({
+  homeBrand = false,
   onProtectedNavigate,
   onAdminNavigate,
   sessionBehavior = "logout",
 }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, authReady } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const protectedNavigate = onProtectedNavigate ?? navigate;
   const sessionLabel = sessionBehavior === "logout" || user ? "Logout" : "Sign in";
+
+  const showSessionControls = !homeBrand || authReady;
 
   function activateSession(mobile: boolean) {
     if (mobile) setIsMobileMenuOpen(false);
@@ -85,16 +89,20 @@ export function Header({
     <header className="border-b border-slate-800">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-6">
-          <button
-            onClick={() => protectedNavigate(primaryNavigation[0].destination)}
-            className="text-xl font-semibold tracking-tight hover:text-slate-100"
-          >
-            NBA Corner
-          </button>
+          {homeBrand ? (
+            <Link to="/" className="text-xl font-semibold tracking-tight">NBA Corner</Link>
+          ) : (
+            <button
+              onClick={() => protectedNavigate(primaryNavigation[0].destination)}
+              className="text-xl font-semibold tracking-tight hover:text-slate-100"
+            >
+              NBA Corner
+            </button>
+          )}
           <nav className="hidden md:flex flex-wrap items-center gap-2">
             {primaryNavigation.map(item => renderItem(item, false))}
             {user?.is_admin && renderItem(adminItem, false, onAdminNavigate ?? navigate)}
-            {renderItem(accountItem, false)}
+            {(!homeBrand || (authReady && user)) && renderItem(accountItem, false)}
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-3">
@@ -103,12 +111,12 @@ export function Header({
               Logged in as <span className="font-semibold">{user.username}</span>
             </span>
           )}
-          <button
+          {showSessionControls && <button
             onClick={() => activateSession(false)}
             className="text-sm px-3 py-1 rounded-md border border-slate-600 hover:bg-slate-800"
           >
             {sessionLabel}
-          </button>
+          </button>}
         </div>
         <button
           type="button"
@@ -137,13 +145,13 @@ export function Header({
                   <span className="font-semibold">{user.username}</span>
                 </div>
               )}
-              {renderItem(accountItem, true)}
-              <button
+              {(!homeBrand || (authReady && user)) && renderItem(accountItem, true)}
+              {showSessionControls && <button
                 onClick={() => activateSession(true)}
                 className="w-full text-left text-sm px-3 py-2 rounded-md border border-slate-600 hover:bg-slate-800"
               >
                 {sessionLabel}
-              </button>
+              </button>}
             </div>
           </nav>
         </div>

@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { headerHarness, nodes, text, pageHeader } = require("./helpers/header-harness.cjs");
 
-const pages = ["AccountPage", "AdminPage", "BracketPage", "DashboardPage", "FaqsPage", "FindLeaguesPage", "LeaderboardPage", "LeagueInfoPage", "LeagueStatsPage", "PastSeasonsPage", "TermsPage"];
+const pages = ["AccountPage", "AdminPage", "BracketPage", "DashboardPage", "FaqsPage", "FindLeaguesPage", "HomePage", "LeaderboardPage", "LeagueInfoPage", "LeagueStatsPage", "PastSeasonsPage", "TermsPage"];
 const guardedPages = ["BracketPage", "FaqsPage", "LeaderboardPage", "PastSeasonsPage", "TermsPage"];
 const redirectPages = ["LeaderboardPage", "PastSeasonsPage"];
 const publicPages = [...guardedPages];
@@ -16,7 +16,7 @@ const button = (tree, label, last = false) => {
   return last ? matches.at(-1) : matches[0];
 };
 
-test("all 11 mounted navigation pages use one Header and cannot reintroduce local primary menus", () => {
+test("all 12 mounted navigation pages use one Header and cannot reintroduce local primary menus", () => {
   const mounted = [...router.matchAll(/import \{ (\w+) \} from "\.\/pages\/(\w+)"/g)]
     .filter(([, name]) => new RegExp(`<${name}\\s*/>`).test(router))
     .map(([, , file]) => file);
@@ -35,7 +35,7 @@ test("all 11 mounted navigation pages use one Header and cannot reintroduce loca
   assert.doesNotMatch(fs.readFileSync("src/App.tsx", "utf8"), /layout\/Header/);
 });
 
-for (const page of pages) for (const mobile of [false, true]) {
+for (const page of pages.filter(name => name !== "HomePage")) for (const mobile of [false, true]) {
   test(`${page}: shared ${mobile ? "mobile" : "desktop"} menu preserves items, styling, visibility and session behavior`, () => {
     for (const user of [null, { username: "Fixture", is_admin: false }, { username: "Admin", is_admin: true }]) {
       const h = headerHarness({ page, user });
@@ -82,7 +82,7 @@ for (const page of pages) for (const mobile of [false, true]) {
   });
 }
 
-for (const page of pages) {
+for (const page of pages.filter(name => name !== "HomePage")) {
   test(`${page}: protected destinations, logo and Admin preserve their existing navigation policy`, () => {
     for (const mobile of [false, true]) for (const historical of page === "BracketPage" ? [false, true] : [true]) {
       const h = headerHarness({ page, historical });
