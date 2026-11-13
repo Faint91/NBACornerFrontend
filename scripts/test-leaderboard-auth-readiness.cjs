@@ -138,13 +138,28 @@ test("stale success cannot repopulate leagues after auth loss", async () => {
   release({ ok: true, status: 200, json: async () => ({ leagues: [{ id: "old", name: "Obsolete league" }] }) }); await p.flush();
   assert.doesNotMatch(visible(p.h.tree), /Obsolete league/);
 });
-test("auth provider distinguishes restoring, anonymous and restored sessions without rewriting storage", () => {
+test("auth provider waits for NBA validation before restoring a stored session", async () => {
   for (const stored of [false, true]) {
     const h = hooks(), writes = [];
-    const component = load("src/auth/AuthContext.tsx", name => name === "react" ? h.react : name === "react/jsx-runtime" ? h.jsx : { setUserId() {}, trackEvent() {} }, { localStorage: { getItem: key => !stored ? null : key === "auth_token" ? "synthetic" : JSON.stringify({ id: "fixture" }), setItem: (...args) => writes.push(args), removeItem: key => writes.push(key) } }).AuthProvider;
-    const first = h.render(() => component({ children: null })); assert.equal(first.props.value.authReady, false);
-    const restored = h.render(() => component({ children: null })).props.value;
-    assert.equal(restored.authReady, true); assert.equal(restored.token, stored ? "synthetic" : null);
+    let release;
+    const response = new Promise(resolve => { release = resolve; });
+    const component = load("src/auth/AuthContext.tsx", name => name === "react" ? h.react : name === "react/jsx-runtime" ? h.jsx : { setUserId() {}, trackEvent() {} }, {
+      AbortController, AbortSignal,
+      fetch: async (url, options) => {
+        assert.equal(url, "https://fixture.invalid/auth/test-me");
+        assert.equal(options.headers.Authorization, "Bearer synthetic");
+        return response;
+      },
+      localStorage: { getItem: key => !stored ? null : key === "auth_token" ? "synthetic" : JSON.stringify({ id: "fixture" }), setItem: (...args) => writes.push(args), removeItem: key => writes.push(key) }
+    }).AuthProvider;
+    const render = () => h.render(() => component({ children: null })).props.value;
+    assert.equal(render().authReady, false);
+    assert.equal(render().authReady, !stored);
+    release({ ok: true, status: 200, json: async () => ({ user: { user_id: "fixture", username: "Fixture", is_admin: false } }) });
+    await new Promise(resolve => setImmediate(resolve));
+    const restored = render();
+    assert.equal(restored.authReady, true);
+    assert.equal(restored.token, stored ? "synthetic" : null);
     assert.equal(writes.length, 0);
   }
 });

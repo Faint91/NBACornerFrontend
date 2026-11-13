@@ -20,8 +20,9 @@ import { AccountPage } from "./pages/AccountPage";
 import { LeagueStatsPage } from "./pages/LeagueStatsPage";
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { token } = useAuth();
-  if (!token) {
+  const { authReady, token, user } = useAuth();
+  if (!authReady) return null;
+  if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
   return children;

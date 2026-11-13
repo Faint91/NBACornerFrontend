@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { setUserId, trackEvent } from "../lib/analytics";
 import type { ReactNode } from "react";
 
@@ -25,22 +25,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // restore from localStorage (optional but handy)
+  const restoration = useRef<AbortController | null>(null);
+
   useEffect(() => {
-    const storedToken = localStorage.getItem("auth_token");
-    const storedUser = localStorage.getItem("auth_user");
-    if (storedToken && storedUser) {
+    const controller = new AbortController();
+    restoration.current = controller;
+
+    async function restoreSession() {
       try {
+        const storedToken = localStorage.getItem("auth_token");
+        const storedUser = localStorage.getItem("auth_user");
+        if (!storedToken || !storedUser) return;
+
+        const profile: User | null = JSON.parse(storedUser);
+        if (!profile || typeof profile.id !== "string") return;
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/test-me`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+          cache: "no-store",
+          redirect: "error",
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]),
+        });
+        if (controller.signal.aborted) return;
+        if (response.status === 401) {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("auth_user");
+          return;
+        }
+        if (!response.ok) return;
+
+        const { user: verified } = await response.json();
+        if (controller.signal.aborted || verified?.user_id !== profile.id ||
+            typeof verified.username !== "string" || typeof verified.is_admin !== "boolean") return;
+
+        setUser({ ...profile, username: verified.username, is_admin: verified.is_admin });
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
       } catch {
-        // ignore bad JSON
+        // A malformed session or unavailable verification leaves protected routes closed.
+      } finally {
+        if (!controller.signal.aborted) setAuthReady(true);
       }
     }
-    setAuthReady(true);
+
+    void restoreSession();
+    return () => controller.abort();
   }, []);
 
   const login = ({ token, user }: { token: string; user: User }) => {
+    restoration.current?.abort();
+    setAuthReady(true);
     setToken(token);
     setUser(user);
     localStorage.setItem("auth_token", token);
@@ -50,6 +83,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    restoration.current?.abort();
+    setAuthReady(true);
     setToken(null);
     setUser(null);
     localStorage.removeItem("auth_token");
